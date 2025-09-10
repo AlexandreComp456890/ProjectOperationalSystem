@@ -1,0 +1,2 @@
+# Nenhuma dependência externa necessária no momento
+# futuras bibliotecas aqui
