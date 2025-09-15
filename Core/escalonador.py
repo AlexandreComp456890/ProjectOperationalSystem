@@ -1,7 +1,8 @@
 from typing import List
 from processo import Processo  # Importa a classe
+from Interface.IAlgorithmics import IAlgorithmics
 
-class Escalonador:
+class Escalonador(IAlgorithmics):
     def __init__(self, FilaDeProntos: List[Processo], ProcessoAtual: Processo):
         self.__fila_de_prontos: List[Processo] = FilaDeProntos  # Fila de processos prontos para execução
         self.__processo_atual: Processo = ProcessoAtual         # Processo atualmente em execução
@@ -29,9 +30,9 @@ class Escalonador:
         pass
 
     # Algoritmos de Escalonamento
-    def SJF(self):
+    def shortest_job_first(self):
         pass
-    def Ruby_Ribbon(self):
+    def round_ribbon(self):
         pass
-    def Prioridade(self):
+    def prioridade(self):
         pass
