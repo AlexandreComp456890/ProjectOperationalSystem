@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import List
-from thread import Thread # Importa a classe
+from .thread import Thread # Importa a classe
 
 class Estados(Enum):
     NEW = "Novo"
@@ -58,7 +58,7 @@ class Processo(ABC):
     def Criar(self):
         pass
     @abstractmethod
-    def Executar(self):
+    def Executar(self, quantum: int):
         pass
     @abstractmethod
     def Bloquear(self):
