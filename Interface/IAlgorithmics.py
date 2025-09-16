@@ -6,7 +6,7 @@ class IAlgorithmics(ABC):
         pass
     
     @abstractmethod
-    def round_ribbon(self):
+    def round_robin(self):
         '''
         :params self:
         '''
