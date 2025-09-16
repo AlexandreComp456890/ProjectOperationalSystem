@@ -1,5 +1,5 @@
 from typing import List
-from processo import Processo  # Importa a classe
+from .processo import Processo  # Importa a classe
 
 class TabelaProcessos:
     def __init__(self):
