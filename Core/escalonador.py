@@ -55,9 +55,27 @@ class Escalonador(IAlgorithmics):
                 self.fila_de_prontos.append(self.processo_atual)
             # se terminou, apenas informa
             else:
-                print(f"[RR] {self.__processo_atual.id_processo} executou {tempo_execucao} e TERMINOU.")
+                print(f"[RR] {self.__processo_atual.id_processo} executou {tempo_execucao} e terminou.")
 
 
     def priority(self):
-        
-        pass
+         # Escalonamento por prioridade preemptivo (processos podem ser interrompidos caso outro de maior prioridade apareça)
+         # Enquanto houver processos na fila
+        while self.fila_de_prontos:
+            # Ordena os processos por prioridade (menor número = maior prioridade)
+            self.fila_de_prontos.sort(key=lambda p: p.prioridade)
+
+            # Pega o processo com maior prioridade
+            self.processo_atual = self.fila_de_prontos.pop(0)
+
+            # Executa apenas pelo quantum ou até terminar
+            tempo_execucao = self.processo_atual.Executar(self.quantum)
+
+            # Se o processo ainda tem tempo de execução, volta para a fila
+            if self.processo_atual.tempo_exec > 0:
+                print(f"[PRIORITY-PREEMPT] {self.processo_atual.id_processo} executou {tempo_execucao}. Restam {self.processo_atual.tempo_exec}.")
+                self.fila_de_prontos.append(self.processo_atual)
+            else:
+                # terminou
+                self.processo_atual.estado = self.processo_atual.estado.FINISHED
+                print(f"[PRIORITY-PREEMPT] {self.processo_atual.id_processo} executou {tempo_execucao} e terminou.")
