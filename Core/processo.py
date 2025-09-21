@@ -55,17 +55,5 @@ class Processo(ABC):
 
     # Métodos abstratos
     @abstractmethod
-    def Criar(self):
-        pass
-    @abstractmethod
-    def Executar(self, quantum: int):
-        pass
-    @abstractmethod
-    def Bloquear(self):
-        pass
-    @abstractmethod
-    def Finalizar(self):
-        pass
-    @abstractmethod
     def Threading(self):
         pass
