@@ -11,11 +11,13 @@ class Estados(Enum):
     FINISHED = "Terminado"
 
 class Processo(ABC):
+    """ def __init___():
+        pass """
     def __init__(self, IdProcesso: str, Prioridade: int, Tempo_Exec: int):
         self.__id_processo: str = IdProcesso       # Identificador do processo
         self.__estado: Estados = Estados.NEW                # Estado: novo, pronto, executando, bloqueado, finalizado
         self.__prioridade: int = Prioridade         # Prioridade do processo
-        self.__tempo_exec: int = Tempo_Exec         # Tempo de execução em unidades (ex: segundos ou quantum)
+        self.__tempo_exec: int = Tempo_Exec         # Tempo de execução em unidades (ex: segundos ou quantum)   
         self.__threads_filhas: List[Thread] = []  # Threads filhas do processo
 
     # GETTERS
