@@ -23,7 +23,13 @@ class SistemaOperacional:
 
     # Métodos
 
-    def Executar(self):
+    def Criar(self):
+        pass
+    def Executar(self, quantum: int):
+        pass
+    def Bloquear(self):
+        pass
+    def Finalizar(self):
         pass
     def QuantidadeDeMemoria(self):
         pass
