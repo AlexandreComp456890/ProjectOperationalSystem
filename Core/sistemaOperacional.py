@@ -1,4 +1,6 @@
 from typing import List
+from .processo import Processo 
+from .tabelaProcessos import TabelaProcessos
 
 class SistemaOperacional:
     def __init__(self, CPU: list[bool], Memoria: float):
@@ -24,7 +26,7 @@ class SistemaOperacional:
     # Métodos
 
     def Criar(self):
-        pass
+        newProcess: Processo = Processo()      
     def Executar(self, quantum: int):
         pass
     def Bloquear(self):
