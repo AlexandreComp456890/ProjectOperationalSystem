@@ -1,14 +1,15 @@
 import random
 from .processo import Processo
-from Interface.enums import EstadoThread
+from Interface.enums import Estado
+from Interface.IMetodosProcessosThread import IMetodosProcessosThread
     
-class Thread:
+class Thread(IMetodosProcessosThread):
     # constructor
-    def __init__(self, IdThread: int, tempo_exec: int, processo_pai: Processo):
+    def __init__(self, IdThread: int, tempo_exec: int, processo_pai: int):
         self.__id_thread: int = IdThread                    # Identificador da thread
-        self.__estado: EstadoThread = EstadoThread.NOVA    
-        self.__tempo_exec: int = tempo_exec
-        self.__processo_pai: Processo = processo_pai    
+        self.__estado: Estado = Estado.NOVO    
+        self.__tempo_exec: int = tempo_exec if tempo_exec > 0 else random.randint(1,10)
+        self.__processo_pai: int = processo_pai    
 
     # GETTERS
     @property
@@ -21,24 +22,39 @@ class Thread:
     def estado(self) -> str:
         return self.__estado.value
     @property
-    def processo_pai(self) -> Processo:
+    def processo_pai(self) -> int:
         return self.__processo_pai
     
     # SETTERS
-    @id_thread.setter
+    @id_thread.setter 
     def id_thread(self, novo_id: int):
-        self.id_thread = novo_id
+        self.__id_thread = novo_id
+
     @tempo_exec.setter
     def tempo_exec(self, novo_tempo: int = None):
-        if ((novo_tempo is not None) and (novo_tempo > 0)):
+        if novo_tempo is not None and novo_tempo > 0:
             self.__tempo_exec = novo_tempo
-            return
-        self.__tempo_exec = random.randint(1, 10)
+        else:
+            self.__tempo_exec = random.randint(1, 10)
+            
+    @estado.setter
+    def estado(self, novo_estado: Estado):
+        if self.__estado != Estado.TERMINADO: 
+            self.__estado = novo_estado
+        else:
+            print (f"Thread {self.__id_thread} foi finalizada. Estado: {self.estado}")
 
     # Métodos 
     def Executar(self):
-        self.__estado = EstadoThread.EXECUTANDO
+        self.estado = Estado.EXECUTANDO 
+    def Bloquear(self):
+        self.estado = Estado.BLOQUEADO
+    def Pronto(self):
+        self.estado = Estado.PRONTO
+    def Finalizar(self):
+        self.__tempo_exec = 0
+        self.estado = Estado.TERMINADO
         
-    def Liberar(self):
-        self.__estado = EstadoThread.BLOQUEADA
         
+    
+    

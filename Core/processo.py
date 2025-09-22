@@ -1,22 +1,27 @@
+import random
 from enum import Enum
 from typing import List, Self
 from .thread import Thread # Importa a classe
-from Interface.enums import EstadoProcesso 
+from .recurso import Recurso
+from Interface.enums import Estado 
+from Interface.IMetodosProcessosThread import IMetodosProcessosThread
 
-class Processo(): 
+class Processo(IMetodosProcessosThread): 
     # Caso de processos de usuário    
-    def __init__(self, IdProcesso: str, Prioridade: int, Tempo_Exec: int):
+    def __init__(self, IdProcesso: str, Prioridade: int):
         # atributos do processo
-        self.__id_processo: str = IdProcesso        # Identificador do processo
-        self.__estado: EstadoProcesso = EstadoProcesso.NOVO        # Estado: novo, pronto, executando, bloqueado, finalizado
-        self.__prioridade: int = Prioridade         # Prioridade do processo
-        self.__tempo_exec: int = Tempo_Exec         # Tempo de execução em unidades (ex: segundos ou quantum)   
+        self.__id_processo: str = IdProcesso                       # Identificador do processo
+        self.__estado: Estado = Estado.NOVO        # Estado: novo, pronto, executando, bloqueado, finalizado
+        self.__prioridade: int = Prioridade                        # Prioridade do processo
+        self.__tempo_exec: int = None                              # Tempo de execução em unidades (ex: segundos ou quantum), não definido até a criação das threads   
         
         # atributo de threads
-        self.__threads_filhas: List[Thread] = []    # Threads filhas do processo
+        self.__threads_filhas: List[Thread] = []                   # Threads filhas do processo
         
         # atributo para gerar Deadlock
-        self.__dependencias: List[str] = []        # Recursos que o processo está esperando 
+        self.__dependencias: List[Recurso] = []                    # Recursos que o processo está esperando 
+        
+        self.__Criarthreads()                                        # Cria threads filhas automaticamente ao criar o processo  
         
 
     # GETTERS
@@ -36,7 +41,7 @@ class Processo():
     def threads_filhas(self) -> List[Thread]:
         return self.__threads_filhas
     @property
-    def dependencias(self) -> List[str]:
+    def dependencias(self) -> List[Recurso]:
         return self.__dependencias
 
     # SETTERS
@@ -53,16 +58,38 @@ class Processo():
     def threads_filhas(self, novas_threads: List[Thread]):
         self.__threads_filhas = novas_threads
     @dependencias.setter
-    def dependencias(self, novas_dependencias: List[str]):
+    def dependencias(self, novas_dependencias: List[Recurso]):
         self.__dependencias = novas_dependencias
         
     # Métodos de controle de estado 
     def Executar(self):
-        self.estado = EstadoProcesso.EXECUTANDO
+        self.__estado = Estado.EXECUTANDO
     def Bloquear(self):
-        self.estado = EstadoProcesso.BLOQUEADO
+        self.__estado = Estado.BLOQUEADO
+        if not self.__threads_filhas:
+            return
+        for thread in self.__threads_filhas:
+            if not thread.estado == Estado.TERMINADO.value:
+                thread.Bloquear()
     def Pronto(self):
-        self.estado = EstadoProcesso.PRONTO
+        self.__estado = Estado.PRONTO
+        if not self.__threads_filhas:
+            return
+        for thread in self.__threads_filhas:
+            thread.Pronto()
     def Finalizar(self):
-        self.estado = EstadoProcesso.TERMINADO
+        self.__tempo_exec = 0
+        self.__estado = Estado.TERMINADO
         
+    # Métodos de controle de threads
+    def __Criarthreads(self, num_threads: int = None):
+        if num_threads is None:
+            num_threads = random.randint(1, 5)
+        
+        for i in range(num_threads):
+            thread = Thread(i+1, None, self.__id_processo)
+            self.__threads_filhas.append(thread)
+        
+        # Atualiza o tempo de execução do processo com base na soma do tempo de execução das threads
+        self.__tempo_exec = sum(thread.tempo_exec for thread in self.__threads_filhas)                                                                                                  
+    
