@@ -1,17 +1,11 @@
 from enum import Enum
 
-class EstadoProcesso(Enum):
+class Estado(Enum):
     NOVO = "Novo"
     PRONTO = "Pronto"
     EXECUTANDO = "Executando"
     BLOQUEADO = "Bloqueado"
     TERMINADO = "Terminado"
-
-class EstadoThread(Enum):
-    NOVA = "Nova"
-    EXECUTANDO = "Executando"
-    BLOQUEADA = "Bloqueada"
-    TERMINADA = "Terminada"
 
 class TipoRecurso(Enum):
     CPU = "CPU"
