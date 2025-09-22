@@ -1,116 +1,90 @@
-# Simulação de Sistema Operacional
+# 🖥️ Simulador de Sistema Operacional  
 
-Linguagem a ser utilizada *Python*
+## 📌 Descrição  
+Este projeto é um **simulador educacional de Sistema Operacional**, desenvolvido em **Python 3**, com foco em demonstrar conceitos fundamentais de:  
+- **Processos e Threads**  
+- **Escalonamento de CPU**  
+- **Gerenciamento de Memória**  
+- **Gerenciamento de Recursos e Deadlocks**  
+- **Entrada e Saída**  
+- **Sistema de Arquivos**  
+
+O simulador executa em **linha de comando** e tem como objetivo reproduzir, de forma didática, as principais funções de um núcleo de Sistema Operacional.  
 
 ## UML
 
 <img src="Documentos/UML.jpg" alt="UML" width="800"/>
+
+## 📂 Estrutura do Projeto  
+
+```plaintext
+ProjectOperationalSystem/
+│── Algoritmos/                 
+│   ├── fcfs.py                 # FCFS
+│   ├── prioridade.py           # Prioridade Preemptivo
+│   ├── round_robin.py          # Round Robin
+│
+│── Core/                      
+│   ├── processo.py             # Classe Processo (PCB simplificado)
+│   ├── thread.py               # Classe Thread (TCB simplificado)
+│   ├── roundrobin.py           # Algoritmo de escalonamento Round Robin
+│   ├── prioridade_preemptivo.py# Algoritmo de escalonamento por prioridade
+│   ├── fcfs.py                 # Algoritmo de escalonamento FCFS
+│   ├── escalonador.py          # Gerencia a política de escalonamento
+│   ├── gerenciadorMemoria.py   # Gerencia memória (a expandir com paginação)
+│   ├── gerenciadorRecursos.py  # Gerencia recursos e deadlocks
+│   ├── recurso.py              # Classe de recurso do sistema
+│   ├── sistemaOperacional.py   # Classe principal do SO
+│
+│── Interface/                  
+│   ├── IAlgorithmics.py        # Interface dos algoritmos de escalonamento
+│   ├── enums.py                # Enumerações de estados, políticas, recursos
+│
+│── main.py                     # Arquivo principal para testes
+│── README.md                   # Documentação do projeto
+│── requirements.txt            # Dependências (se necessário)
+```
+
+## ⚙️ Funcionalidades Implementadas  
+
+✅ **Processos (PCB simplificado)**  
+- PID, prioridade, tempo de execução, estado, threads filhas, dependências.  
+- Operações: `Executar`, `Bloquear`, `Pronto`, `Finalizar`.  
+
+✅ **Threads (TCB simplificado)**  
+- ID, tempo de execução, estado, processo pai.  
+
+✅ **Escalonadores de CPU**  
+- **FCFS (First Come, First Served)**  
+- **Round Robin (com quantum configurável)**  
+- **Prioridade Preemptiva**  
+- Impressão em tabela do estado dos processos a cada rodada.  
+
+✅ **Gerenciamento de Recursos**  
+- Alocação e liberação de recursos.  
+- Estrutura para detecção de deadlock (a ser expandida).  
+
+✅ **Sistema Operacional (núcleo)**  
+- Integra processos, escalonador, gerenciador de memória e recursos.  
+
+## 🚧 Funcionalidades em Desenvolvimento  
+
+- 🔄 **Paginação simples** (gerenciamento de memória)  
+- 💾 **Sistema de Arquivos** (criação, leitura, escrita, exclusão, diretórios)  
+- ⌨️ **Entrada/Saída** (simulação de dispositivos e interrupções)  
+- 📊 **Métricas de desempenho** (turnaround, tempo de espera, throughput, utilização de CPU)  
+- 📝 **Log textual** com clock lógico  
+- ⚡ **Interface CLI** para configurar política de escalonamento, quantum, memória etc.  
+
+## ▶️ Como Executar  
+
+1. Clone o repositório:  
+   ```bash
+   git clone https://github.com/AlexandreComp456890/ProjectOperationalSystem
+   cd ProjectOperationalSystem
 
 ## Autores
  
 - <a href="https://github.com/AlexandreComp456890"> Alexandre Rocha </a>  
 - <a href="https://github.com/jhenifersgomes209"> Jhenifer Silva </a>
 - <a href="https://github.com/YanSilva22"> Yan Silva </a> 
-
-## Descrição Geral
-
-Este projeto tem como objetivo simular os principais conceitos de um sistema operacional, com foco em *gerência de processos*, *escalonamento de CPU*, *prioridades*, *execução por quantum*, e uso de *threads*. A simulação é implementada em Python utilizando os princípios de POO (Programação Orientada a Objetos) e abstrações de interface.
-
-## Objetivos do Projeto
-
-- Simular a criação, execução, bloqueio e finalização de processos.
-- Representar o funcionamento básico da CPU e da memória.
-- Implementar três algoritmos de escalonamento:
-  - *Round Robin*
-  - *Shortest Job First (SJF)*
-  - *Priority (com preempção)*
-- Modelar threads de usuário e do sistema.
-
----
-
-## Estrutura de Pastas
-
-projeto_sistema_operacional/
-│
-├── escalonador/ # Módulos de escalonamento
-│ ├── escalonados.py
-│ ├── processo.py
-│ ├── tabelaProcessos.py
-│ ├── sistemaOperacional.py
-│ ├── thread.py
-│ └── threading_processo.py
-│
-├── Interface/ # Interfaces abstratas
-│ └── IAlgorithmics.py
-│
-└── README.md # Este documento
-
-## Componentes do Sistema
-
-### Classe `SistemaOperacional`
-Representa o sistema como um todo, com CPU e memória.
-
-- `cpu`: Lista de booleanos indicando se as CPUs estão livres ou ocupadas.
-- `memoria`: Memória disponível (float).
-
----
-
-### Classe `Processo`
-Classe abstrata que define o comportamento dos processos.
-
-- Atributos:
-  - `id_processo`: identificador único.
-  - `prioridade`: valor numérico.
-  - `tempo_exec`: tempo restante de execução.
-  - `estado`: estado atual (NEW, READY, EXECUTED, BLOCKED, FINISHED).
-  - `threads_filhas`: threads associadas.
-- Métodos abstratos: `Criar()`, `Executar()`, `Bloquear()`, `Finalizar()`, `Threading()`.
-
----
-
-### Classe `Thread` / `Threading`
-Representam threads associadas a processos, podendo ser de usuário ou sistema.
-
-- `id_thread`: identificador único.
-- `euusuario`: booleano indicando se é de usuário (`True`) ou do sistema (`False`).
-
----
-
-### Classe `TabelaProcessos`
-Controla todos os processos no sistema.
-
-- Métodos:
-  - `AdicionarProcesso(processo)`
-  - `RemoverProcesso(processo)`
-  - `ListarProcessos()`
-
----
-
-### Classe `Escalonador` (implements `IAlgorithmics`)
-Responsável por implementar os algoritmos de escalonamento:
-
-#### `round_robin()`
-- Cada processo é executado por um tempo fixo (quantum).
-- Se o processo não termina, ele retorna ao final da fila.
-- Exibe mensagens de log sobre execução e finalização.
-
-#### `shortest_job_first()`
-- **Ainda não implementado**.
-- Quando implementado, deve priorizar o processo com menor tempo restante de execução.
-
-#### `priority()`
-- Ordena os processos por prioridade (quanto menor o valor, maior a prioridade).
-- Executa o processo de maior prioridade por um quantum.
-- Se não terminar, volta para a fila.
-
----
-
-## Interface `IAlgorithmics`
-
-Define os métodos que os escalonadores devem implementar:
-
-- `shortest_job_first()`
-- `round_robin()`
-- `priority()`
-
-Isso permite a flexibilidade de troca de diferentes estratégias de escalonamento sem alterar o código de execução.
