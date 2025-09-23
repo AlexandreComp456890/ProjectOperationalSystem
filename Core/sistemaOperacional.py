@@ -45,22 +45,24 @@ class SistemaOperacional:
 
     def criarProcesso(self, pid: int, prioridade: int = 0):
         p = Processo(pid, prioridade)
-        self.tabelaProcessos.append(p)
-        self.escalonador.adicionarProcesso(p)
+        self.__tabelaProcessos.append(p)
+        self.escalonador.AdicionarProcesso(p)
         return p 
     
     def finalizarProcesso(self, processo: Processo):
-        processo.terminar()
-        if processo in self.tabelaProcessos:
-            self.tabelaProcessos.remove(processo)
+        processo.Finalizar()
+        if processo in self.__tabelaProcessos:
+            self.__tabelaProcessos.remove(processo)
 
     def escalonar(self):
-        processo = self.escalonador.obterProximoProcesso()
+        processo = self.escalonador.ObterProximoProcesso()
         if processo:
-            processo.executar()
+            processo.Executar()
 
+# region Métodos não implementados
     def alocarRecurso(self, processo: Processo, recurso: Recurso):
         self.gerenciadorRecursos.requisitarRecurso(processo, recurso)
 
     def liberarRecurso(self, processo: Processo, recurso: Recurso):
         self.gerenciadorRecursos.liberarRecurso(processo, recurso)
+# endregion 
