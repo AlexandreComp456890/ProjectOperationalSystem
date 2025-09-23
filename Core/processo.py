@@ -11,7 +11,7 @@ class Processo(IMetodosProcessosThread):
     def __init__(self, IdProcesso: str, Prioridade: int):
         # atributos do processo
         self.__id_processo: str = IdProcesso                       # Identificador do processo
-        self.__estado: Estado = Estado.NOVO        # Estado: novo, pronto, executando, bloqueado, finalizado
+        self.__estado: Estado = Estado.NOVO                        # Estado: novo, pronto, executando, bloqueado, finalizado
         self.__prioridade: int = Prioridade                        # Prioridade do processo
         self.__tempo_exec: int = None                              # Tempo de execução em unidades (ex: segundos ou quantum), não definido até a criação das threads   
         
@@ -21,7 +21,7 @@ class Processo(IMetodosProcessosThread):
         # atributo para gerar Deadlock
         self.__dependencias: List[Recurso] = []                    # Recursos que o processo está esperando 
         
-        self.__Criarthreads()                                        # Cria threads filhas automaticamente ao criar o processo  
+        self.__Criarthreads()                                      # Cria threads filhas automaticamente ao criar o processo  
         
 
     # GETTERS
@@ -51,6 +51,12 @@ class Processo(IMetodosProcessosThread):
     @tempo_exec.setter
     def tempo_exec(self, novo_tempo: int):
         self.__tempo_exec = novo_tempo
+    @estado.setter
+    def estado(self, novo_estado: Estado):
+        if self.__estado != Estado.TERMINADO: 
+            self.__estado = novo_estado
+        else:
+            print (f"Thread {self.__id_processo} foi finalizada. Estado: {self.estado}")
     @prioridade.setter
     def prioridade(self, nova_prioridade: int):
         self.__prioridade = nova_prioridade
@@ -62,24 +68,39 @@ class Processo(IMetodosProcessosThread):
         self.__dependencias = novas_dependencias
         
     # Métodos de controle de estado 
-    def Executar(self):
+    def Executar(self, quantum: int = 0):
         self.__estado = Estado.EXECUTANDO
+        if not self.__threads_filhas:
+            print("Erro. Esse processo não tem threads!")
+            return
+        for thread in self.__threads_filhas:
+            if thread.estado == Estado.PRONTO.value:
+                thread.Executar(quantum)
+    
     def Bloquear(self):
         self.__estado = Estado.BLOQUEADO
         if not self.__threads_filhas:
+            print("Erro. Esse processo não tem threads!")
             return
         for thread in self.__threads_filhas:
-            if not thread.estado == Estado.TERMINADO.value:
-                thread.Bloquear()
+            thread.Bloquear()
+    
     def Pronto(self):
         self.__estado = Estado.PRONTO
         if not self.__threads_filhas:
+            print("Erro. Esse processo não tem threads!")
             return
         for thread in self.__threads_filhas:
             thread.Pronto()
+    
     def Finalizar(self):
         self.__tempo_exec = 0
         self.__estado = Estado.TERMINADO
+        if not self.__threads_filhas:
+            print("Erro. Esse processo não tem threads!")
+            return
+        for thread in self.__threads_filhas:
+            thread.Finalizar()
         
     # Métodos de controle de threads
     def __Criarthreads(self, num_threads: int = None):
