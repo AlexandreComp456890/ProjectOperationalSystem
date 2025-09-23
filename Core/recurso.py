@@ -1,12 +1,10 @@
-from typing import Optional
 from Interface.enums import TipoRecurso
-from processo import Processo
 
 class Recurso:
     def __init__(self, rid: int, tipo: TipoRecurso):
         self.__rid = rid
         self.__tipo = tipo
-        self.__alocadoPara: Optional[Processo] = None
+        self.__alocadoPara: int = None
 
     @property
     def rid(self) -> int:
@@ -17,11 +15,11 @@ class Recurso:
         return self.__tipo
 
     @property
-    def alocadoPara(self) -> Optional[Processo]:
+    def alocadoPara(self) -> int:
         return self.__alocadoPara
 
-    def alocar(self, processo: Processo):
-        self.__alocadoPara = processo
+    def alocar(self, processo_id: int):
+        self.__alocadoPara = processo_id
 
     def liberar(self):
         self.__alocadoPara = None
