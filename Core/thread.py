@@ -1,5 +1,4 @@
 import random
-from .processo import Processo
 from Interface.enums import Estado
 from Interface.IMetodosProcessosThread import IMetodosProcessosThread
     
@@ -8,7 +7,7 @@ class Thread(IMetodosProcessosThread):
     def __init__(self, IdThread: int, tempo_exec: int, processo_pai: int):
         self.__id_thread: int = IdThread                    # Identificador da thread
         self.__estado: Estado = Estado.NOVO    
-        self.__tempo_exec: int = tempo_exec if tempo_exec > 0 else random.randint(1,10)
+        self.__tempo_exec: int = random.randint(1,10)
         self.__processo_pai: int = processo_pai    
 
     # GETTERS
@@ -45,12 +44,26 @@ class Thread(IMetodosProcessosThread):
             print (f"Thread {self.__id_thread} foi finalizada. Estado: {self.estado}")
 
     # Métodos 
-    def Executar(self):
+    def Executar(self, quantum: int):
+        if self.__estado != Estado.PRONTO: return
         self.estado = Estado.EXECUTANDO 
+        if quantum <= 0:
+            self.tempo_exec = 0
+            self.estado = Estado.TERMINADO
+        else:
+            self.tempo_exec -= quantum
+            if self.tempo_exec <= 0:
+                self.tempo_exec = 0
+                self.estado = Estado.TERMINADO
+            else:
+                self.estado = Estado.PRONTO
+        
     def Bloquear(self):
         self.estado = Estado.BLOQUEADO
+    
     def Pronto(self):
         self.estado = Estado.PRONTO
+    
     def Finalizar(self):
         self.__tempo_exec = 0
         self.estado = Estado.TERMINADO
