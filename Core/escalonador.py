@@ -5,7 +5,7 @@ from Interface.IAlgorithmics import IAlgorithmics # Importa a interface
 from Interface.enums import PoliticaEscalonamento # Importa a enumeração
 
 
-class Escalonador(IAlgorithmics):
+class Escalonador():
     def __init__(self,  filaProntos: list[Processo], politica: PoliticaEscalonamento):
         self.__fila_de_prontos: List[Processo] = filaProntos  # Fila de processos prontos para execução
         self.__politica: PoliticaEscalonamento = politica  # Política de escalonamento (Prioridade, Round Robin)
@@ -29,8 +29,13 @@ class Escalonador(IAlgorithmics):
 
     # Métodos
     def AdicionarProcesso(self, processo: Processo):
-        pass
-    def ObterProximoProcesso(self)-> Processo:
-        pass
+        if processo not in self.__fila_de_prontos:
+            self.__fila_de_prontos.append(processo)
+    
+    def ObterProximoProcesso(self) -> Processo:
+        if self.__fila_de_prontos:
+            return self.__fila_de_prontos.pop(0)
+        return None
+    
     def Preemptar(self):
         pass
