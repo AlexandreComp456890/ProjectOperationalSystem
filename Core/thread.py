@@ -41,7 +41,7 @@ class Thread(IMetodosProcessosThread):
         if self.__estado != Estado.TERMINADO: 
             self.__estado = novo_estado
         else:
-            print (f"Thread {self.__id_thread} foi finalizada. Estado: {self.estado}")
+            print (f"Processo {self.__processo_pai} Thread {self.__id_thread} foi finalizada. Estado: {self.estado}")
 
     # Métodos 
     def Executar(self, quantum: int):
