@@ -13,7 +13,7 @@ class SistemaOperacional:
         self.__gerenciador_recursos: GerenciadorRecursos = gerenciadorRecursos # Gerenciador de recursos
 
     # GETTERS
-    @property
+
     @property
     def tabelaProcessos(self) -> List[Processo]:
         return self.__tabelaProcessos
