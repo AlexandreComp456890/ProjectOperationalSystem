@@ -43,6 +43,7 @@ class Escalonador:
     def algoritmo(self, novo_algoritmo):
         self.__algoritmo = novo_algoritmo
 
+    # MÉTODOS
     # MÉTODO INTERNO PARA INSTANCIAR O ALGORITMO CERTO
     def _instanciar_algoritmo(self, politica: PoliticaEscalonamento):
         if politica == PoliticaEscalonamento.FCFS:
@@ -64,10 +65,10 @@ class Escalonador:
             self.__processo_atual = None
             return None
 
-        # 👉 Agora quem decide é o algoritmo escolhido
+        # Agora quem decide é o algoritmo escolhido
         self.__processo_atual = self.__algoritmo.EscolherProximo(self.__fila_de_prontos)
         return self.__processo_atual
 
     def Preemptar(self):
-        # pode ser implementado futuramente se quiser simular troca forçada
+        # implementada futuramente
         pass

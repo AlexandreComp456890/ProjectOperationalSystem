@@ -17,7 +17,7 @@ class Processo(IMetodosProcessosThread):
         
         # atributo de threads
         self.__threads_filhas: List[Thread] = []                   # Threads filhas do processo
-        
+
         # atributo para gerar Deadlock
         self.__dependencias: List[Recurso] = []                    # Recursos que o processo está esperando 
         

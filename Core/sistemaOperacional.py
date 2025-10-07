@@ -59,10 +59,9 @@ class SistemaOperacional:
         if processo:
             processo.Executar()
 
-# region Métodos não implementados
+    # Métodos não implementados
     def alocarRecurso(self, processo: Processo, recurso: Recurso):
         self.gerenciadorRecursos.requisitarRecurso(processo, recurso)
 
     def liberarRecurso(self, processo: Processo, recurso: Recurso):
         self.gerenciadorRecursos.liberarRecurso(processo, recurso)
-# endregion 
