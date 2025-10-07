@@ -13,7 +13,7 @@ O simulador executa em **linha de comando** e tem como objetivo reproduzir, de f
 
 ## UML
 
-<img src="Documentos/UML.jpg" alt="UML" width="800"/>
+<img src="Documentos/UML_SistemasOperacionais.svg" alt="UML" width="1000"/>
 
 ## 📂 Estrutura do Projeto  
 
@@ -94,7 +94,7 @@ Ao rodar o arquivo `main.py`, o simulador inicia em modo de **linha de comando**
 - **Round Robin**
 - **Prioridade Preemptiva**
 
-<img src="Documentos/UML_SistemasOperacionais.svg" alt="menu" width="1000"/>
+<img src="Documentos/Menu.PNG" alt="menu" width="500"/>
 
 ---
 
