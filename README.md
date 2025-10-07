@@ -5,11 +5,11 @@ Este projeto é um **simulador educacional de Sistema Operacional**, desenvolvid
 - **Processos e Threads**  
 - **Escalonamento de CPU**  
 - **Gerenciamento de Memória**  
-- **Gerenciamento de Recursos e Deadlocks**  
-- **Entrada e Saída**  
-- **Sistema de Arquivos**  
+- **Gerenciamento de Recursos e Deadlocks (não Implementado)**  
+- **Entrada e Saída (não Implementado)**  
+- **Sistema de Arquivos (não Implementado)**  
 
-O simulador executa em **linha de comando** e tem como objetivo reproduzir, de forma didática, as principais funções de um núcleo de Sistema Operacional.  
+O simulador executa em **linha de comando** e tem como objetivo reproduzir, de forma didática, as principais funções de um Sistema Operacional.  
 
 ## UML
 
@@ -82,6 +82,66 @@ ProjectOperationalSystem/
    ```bash
    git clone https://github.com/AlexandreComp456890/ProjectOperationalSystem
    cd ProjectOperationalSystem
+2. Execute o programa principal:
+   ```bash
+   python main.py
+
+## 🎮 Execução (`main.py`)
+
+Ao rodar o arquivo `main.py`, o simulador inicia em modo de **linha de comando**, exibindo um menu interativo com três opções de política de escalonamento:
+
+- **FCFS (First Come, First Served)**
+- **Round Robin**
+- **Prioridade Preemptiva**
+
+<img src="Documentos/UML_SistemasOperacionais.svg" alt="menu" width="1000"/>
+
+---
+
+### 🧩 Funcionamento
+
+1. O sistema gera automaticamente um conjunto de **processos aleatórios**, cada um contendo:
+   - Um **identificador** (ex: `P1`, `P2`, `P3`)
+   - Uma **prioridade aleatória** (de 1 a 5)
+   - Um **tempo de execução aleatório**
+
+2. Após selecionar o algoritmo de escalonamento desejado, ele é aplicado sobre essa fila de processos.
+
+3. A cada rodada, o sistema exibe uma **tabela formatada**, mostrando:
+   - 🆔 **ID do processo**
+   - ⚙️ **Prioridade**
+   - ⏱️ **Tempo restante de execução**
+   - 📊 **Estado atual** (*Pronto*, *Executando* ou *Finalizado*)
+   - ⌛ **Tempo executado na rodada**
+
+FCFS:
+
+<img src="Documentos/FCFS.PNG" alt="FCFS" width="500"/>
+
+Rund Robin:
+
+<img src="Documentos/RR.PNG" alt="RR" width="500"/>
+
+Prioridade Preemptiva:
+
+<img src="Documentos/PP.PNG" alt="PP" width="500"/>
+
+4. O simulador repete esse ciclo até que **todos os processos sejam finalizados**, encerrando com a mensagem:
+
+   ```bash
+   [SO] Todos os processos foram finalizados!
+
+## 📊 Progresso do Projeto
+
+O grupo estima que o projeto atingiu aproximadamente **40% de conclusão**.  
+As principais funcionalidades implementadas até o momento incluem:
+
+- Criação e gerenciamento de processos e threads;  
+- Implementação dos algoritmos de escalonamento **FCFS**, **Round Robin** e **Prioridade Preemptiva**;  
+- Estrutura base do **Sistema Operacional**, integrando componentes centrais;  
+- Impressão formatada da execução dos processos no terminal.
+
+As próximas etapas incluem o desenvolvimento dos módulos de **memória**, **recursos**, **sistema de arquivos** e **entrada/saída**.
 
 ## Autores
  
