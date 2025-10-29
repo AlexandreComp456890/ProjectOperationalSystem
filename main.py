@@ -1,61 +1,42 @@
-import random
-from Core.processo import Processo
-from Algoritmos.round_robin import RoundRobin
-from Algoritmos.prioridade import PrioridadePreemptivo
-from Algoritmos.fcfs import FCFS
+from Core.sistemaOperacional import SistemaOperacional
+from Core.escalonador import Escalonador
+from Core.gerenciadorMemoria import GerenciadorMemoria
+from Core.gerenciadorRecursos import GerenciadorRecursos
+from Interface.enums import PoliticaEscalonamento
 
-def gerar_processos_aleatorios(qtd=3):
-    processos = []
-    for i in range(1, qtd+1):
-        prioridade = random.randint(1, 5)
-        tempo = random.randint(2, 8)
-        p = Processo(f"P{i}", prioridade)
-        p.tempo_exec = tempo  # força um tempo de execução
-        processos.append(p)
-    return processos
+# Inicializa os componentes principais
+mem = GerenciadorMemoria(memoria_total=64, tamanho_pagina=8)
+rec = GerenciadorRecursos()
+esc = Escalonador([], PoliticaEscalonamento.FCFS)
 
-def main():
-    print("=== Simulador de Escalonamento de Processos ===")
+so = SistemaOperacional(esc, mem, rec)
 
-    while True:
-        print("\nEscolha a política de escalonamento:")
-        print("1 - FCFS (First Come, First Served)")
-        print("2 - Round Robin")
-        print("3 - Prioridade Preemptiva")
-        print("0 - Sair")
+# Cria dois processos
+p1 = so.criarProcesso("P1", prioridade=1, tamanho_memoria=20)
+p2 = so.criarProcesso("P2", prioridade=2, tamanho_memoria=16)
 
-        opcao = input("Digite sua escolha: ")
+so.mostrar_mapa_memoria()
 
-        if opcao == "0":
-            print("Encerrando simulador...")
-            break
+# Simula execução
+so.escalonar()
 
-        # gerar processos
-        processos = gerar_processos_aleatorios(3)
+# Testa acesso de memória e falta de página
+mem.acessar_endereco(p1, 2)
+mem.acessar_endereco(p1, 5)  # tentativa inválida -> ERRO / falta de página
 
-        if opcao == "1":
-            print("\n=== Teste FCFS ===\n")
-            fila = processos.copy()
-            algoritmo = FCFS()
-        elif opcao == "2":
-            print("\n=== Teste Round Robin ===\n")
-            fila = processos.copy()
-            algoritmo = RoundRobin(quantum=2)
-        elif opcao == "3":
-            print("\n=== Teste Prioridade Preemptiva ===\n")
-            fila = processos.copy()
-            algoritmo = PrioridadePreemptivo(quantum=2)
-        else:
-            print("Opção inválida.")
-            continue
+# Simula acessos de memória normais
+mem.acessar_endereco(p1, 0)  # deve estar carregada
+mem.acessar_endereco(p1, 1)  # deve estar carregada
+mem.acessar_endereco(p1, 2)  # deve estar carregada
 
-        print(f"[SO] Processos gerados: {[p.id_processo for p in processos]}")
+# Agora acessa uma página nova (válida mas ainda não carregada) -> gera falta real
+mem.tabela_paginas[p1.id_processo].append(type(mem.tabela_paginas[p1.id_processo][0])(3, p1))
+mem.acessar_endereco(p1, 3)  # falta de página real
 
-        # executa até finalizar todos os processos
-        while fila:
-            algoritmo.EscolherProximo(fila)
+# Finaliza um processo
+so.finalizarProcesso(p1)
 
-        print("\n[SO] Todos os processos foram finalizados!\n")
+so.mostrar_mapa_memoria()
+so.estatisticas_memoria()
 
-if __name__ == "__main__":
-    main()
+

@@ -6,11 +6,11 @@ from .gerenciadorRecursos import GerenciadorRecursos
 from .recurso import Recurso
 
 class SistemaOperacional:
-    def __init__(self, tabelaProcessos: list[Processo], escalonador: Escalonador, gerenciadorMemoria: GerenciadorMemoria, gerenciadorRecursos: GerenciadorRecursos):
+    def __init__(self, escalonador: Escalonador, gerenciadorMemoria: GerenciadorMemoria, gerenciadorRecursos: GerenciadorRecursos):
         self.__tabelaProcessos: List[Processo] = []  # Tabela de processos do sistema
-        self.__escalonador: Escalonador = escalonador               # Escalonador de processos
-        self.__gerenciador_memoria: GerenciadorMemoria = gerenciadorMemoria # Gerenciador de memória
-        self.__gerenciador_recursos: GerenciadorRecursos = gerenciadorRecursos # Gerenciador de recursos
+        self.__escalonador: Escalonador = escalonador
+        self.__gerenciador_memoria: GerenciadorMemoria = gerenciadorMemoria
+        self.__gerenciador_recursos: GerenciadorRecursos = gerenciadorRecursos
 
     # GETTERS
 
@@ -26,42 +26,46 @@ class SistemaOperacional:
     @property
     def gerenciador_recursos(self) -> GerenciadorRecursos:
         return self.__gerenciador_recursos
-    
-    # SETTERS 
-    @tabelaProcessos.setter
-    def tabelaProcessos(self, nova_tabela: List[Processo]):
-        self.__tabelaProcessos = nova_tabela
-    @escalonador.setter
-    def escalonador(self, novo_escalonador: Escalonador):
-        self.__escalonador = novo_escalonador
-    @gerenciador_memoria.setter
-    def gerenciador_memoria(self, novo_gerenciador: GerenciadorMemoria):
-        self.__gerenciador_memoria = novo_gerenciador
-    @gerenciador_recursos.setter
-    def gerenciador_recursos(self, novo_gerenciador: GerenciadorRecursos):
-        self.__gerenciador_recursos = novo_gerenciador
 
-    # Métodos
+    # MÉTODOS
 
-    def criarProcesso(self, pid: int, prioridade: int = 0):
+    def criarProcesso(self, pid: str, prioridade: int = 0, tamanho_memoria: int = 16):
+        """Cria um processo e tenta alocá-lo na memória."""
         p = Processo(pid, prioridade)
+
+        # Aloca memória
+        sucesso = self.__gerenciador_memoria.alocar_processo(p, tamanho_memoria)
+        if not sucesso:
+            print(f"[SO] Falha ao criar processo {pid} — memória insuficiente.")
+            return None
+
         self.__tabelaProcessos.append(p)
-        self.escalonador.AdicionarProcesso(p)
+        self.__escalonador.AdicionarProcesso(p)
+        print(f"[SO] Processo {pid} criado e adicionado ao escalonador.\n")
         return p 
-    
+
     def finalizarProcesso(self, processo: Processo):
+        """Finaliza e remove processo."""
         processo.Finalizar()
+
+        # Libera memória
+        self.__gerenciador_memoria.liberar_processo(processo)
+
         if processo in self.__tabelaProcessos:
             self.__tabelaProcessos.remove(processo)
 
+        print(f"[SO] Processo {processo.id_processo} finalizado.\n")
+
     def escalonar(self):
-        processo = self.escalonador.ObterProximoProcesso()
+        """Executa o próximo processo na fila."""
+        processo = self.__escalonador.ObterProximoProcesso()
         if processo:
             processo.Executar()
+        else:
+            print("[SO] Nenhum processo para executar.\n")
 
-    # Métodos não implementados
-    def alocarRecurso(self, processo: Processo, recurso: Recurso):
-        self.gerenciadorRecursos.requisitarRecurso(processo, recurso)
+    def mostrar_mapa_memoria(self):
+        self.__gerenciador_memoria.mostrar_mapa()
 
-    def liberarRecurso(self, processo: Processo, recurso: Recurso):
-        self.gerenciadorRecursos.liberarRecurso(processo, recurso)
+    def estatisticas_memoria(self):
+        self.__gerenciador_memoria.estatisticas()
