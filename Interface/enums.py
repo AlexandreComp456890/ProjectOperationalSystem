@@ -15,4 +15,5 @@ class TipoRecurso(Enum):
 class PoliticaEscalonamento(Enum):
     FCFS = "First Come First Serve"
     RR = "Round Robin"
-    PRIORIDADE = "Prioridade"
+    PRIORIDADE_PREEMPTIVO = "Prioridade Preemptivo"
+    PRIORIDADE_NAO_PREEMPTIVO = "Prioridade Não Preemptivo"

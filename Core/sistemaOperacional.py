@@ -17,12 +17,15 @@ class SistemaOperacional:
     @property
     def tabelaProcessos(self) -> List[Processo]:
         return self.__tabelaProcessos
+
     @property
     def escalonador(self) -> Escalonador:
         return self.__escalonador
+
     @property
     def gerenciador_memoria(self) -> GerenciadorMemoria:
         return self.__gerenciador_memoria
+
     @property
     def gerenciador_recursos(self) -> GerenciadorRecursos:
         return self.__gerenciador_recursos
@@ -60,7 +63,12 @@ class SistemaOperacional:
         """Executa o próximo processo na fila."""
         processo = self.__escalonador.ObterProximoProcesso()
         if processo:
-            processo.Executar()
+            terminou = processo.Executar()   # <-- ADICIONADO: captura retorno
+
+            # <-- ADICIONADO: finalização automática se o processo terminou
+            if terminou:
+                self.finalizarProcesso(processo)
+
         else:
             print("[SO] Nenhum processo para executar.\n")
 

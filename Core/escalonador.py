@@ -4,6 +4,7 @@ from Interface.enums import PoliticaEscalonamento
 from Algoritmos.fcfs import FCFS
 from Algoritmos.round_robin import RoundRobin
 from Algoritmos.prioridade import PrioridadePreemptivo
+from Algoritmos.prioridadeNPreemptivo import PrioridadeNaoPreemptivo
 
 
 class Escalonador:
@@ -25,6 +26,7 @@ class Escalonador:
     @property
     def politica(self) -> PoliticaEscalonamento:
         return self.__politica
+
     @property
     def algoritmo(self):   
         return self.__algoritmo
@@ -39,6 +41,7 @@ class Escalonador:
         print(f"[Escalonador] Mudando política de {self.__politica.value} para {nova_politica.value}")
         self.__politica = nova_politica
         self.__algoritmo = self._instanciar_algoritmo(nova_politica)
+
     @algoritmo.setter
     def algoritmo(self, novo_algoritmo):
         self.__algoritmo = novo_algoritmo
@@ -48,14 +51,20 @@ class Escalonador:
     def _instanciar_algoritmo(self, politica: PoliticaEscalonamento):
         if politica == PoliticaEscalonamento.FCFS:
             return FCFS()
+
         elif politica == PoliticaEscalonamento.RR:
-            return RoundRobin(quantum=2)   # Quantum configurável
-        elif politica == PoliticaEscalonamento.PRIORIDADE:
+            return RoundRobin(quantum=2)
+
+        elif politica == PoliticaEscalonamento.PRIORIDADE_PREEMPTIVO:
             return PrioridadePreemptivo(quantum=2)
+
+        elif politica == PoliticaEscalonamento.PRIORIDADE_NAO_PREEMPTIVO:
+            return PrioridadeNaoPreemptivo()
+
         else:
             raise ValueError(f"Política {politica} não reconhecida!")
 
-    # MÉTODOS
+    # MÉTODOS DO ESCALONADOR
     def AdicionarProcesso(self, processo: Processo):
         if processo not in self.__fila_de_prontos:
             self.__fila_de_prontos.append(processo)
@@ -64,11 +73,11 @@ class Escalonador:
         if not self.__fila_de_prontos:
             self.__processo_atual = None
             return None
-
+        
         # Agora quem decide é o algoritmo escolhido
         self.__processo_atual = self.__algoritmo.EscolherProximo(self.__fila_de_prontos)
         return self.__processo_atual
 
     def Preemptar(self):
-        # implementada futuramente
+        # poderá ser implementado futuramente
         pass
