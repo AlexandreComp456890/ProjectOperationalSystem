@@ -1,0 +1,4 @@
+[INFO] Processo P1 criado e adicionado ao escalonador.
+[INFO] Processo P2 criado e adicionado ao escalonador.
+[INFO] Processo P3 criado e adicionado ao escalonador.
+[CONTEXT SWITCH] None -> P1
