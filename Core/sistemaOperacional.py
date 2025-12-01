@@ -20,6 +20,9 @@ class SistemaOperacional:
         self.__tempos_espera: dict[str, int] = {}   # PID -> tempo total em pronto
         self.__tempos_primeira_cpu: dict[str, int] = {}  # PID -> tempo até primeira execução
 
+        # === ADIÇÃO === tempo global do sistema
+        self.__tempo_global: int = 0
+
     # GETTERS
     @property
     def tabelaProcessos(self) -> List[Processo]:
@@ -52,6 +55,20 @@ class SistemaOperacional:
         """Retorna o total de unidades de tempo de CPU utilizadas."""
         return self.__cpu_utilizada
 
+    # === ADIÇÃO === salvar contexto
+    def salvar_contexto(self, processo: Processo):
+        """Salva o contexto atual do processo antes de uma troca."""
+        if processo is None:
+            return
+        self.__logs.append(f"[SAVE] Contexto salvo de {processo.id_processo}")
+
+    # === ADIÇÃO === restaurar contexto
+    def restaurar_contexto(self, processo: Processo):
+        """Restaura o contexto salvo para o processo que irá executar."""
+        if processo is None:
+            return
+        self.__logs.append(f"[RESTORE] Contexto restaurado de {processo.id_processo}")
+
     # MÉTODOS
     def criarProcesso(self, pid: str, prioridade: int = 0, tamanho_memoria: int = 16, tipo_recurso: Recurso = NotImplemented):
         """Cria um processo e tenta alocá-lo na memória."""
@@ -60,6 +77,9 @@ class SistemaOperacional:
         self.__tempos_retorno[pid] = 0
         self.__tempos_espera[pid] = 0
         self.__tempos_primeira_cpu[pid] = 0
+
+        # === ADIÇÃO === registra tempo de chegada real
+        p.registrarChegada(self.__tempo_global)
 
         # Aloca memória
         if tipo_recurso == NotImplemented:
@@ -105,8 +125,13 @@ class SistemaOperacional:
 
     def escalonar(self):
         """Executa o próximo processo na fila do escalonador e contabiliza métricas e sobrecarga."""
+        
+        # === ADIÇÃO === avança o tempo global
+        self.__tempo_global += 1
+
         processo_anterior = self.escalonador.processo_atual
         processo = self.__escalonador.ObterProximoProcesso()
+
         if processo:
             # primeira execução do processo
             if self.__tempos_primeira_cpu[processo.id_processo] is None:
@@ -115,19 +140,25 @@ class SistemaOperacional:
             # troca de contexto se necessário
             if processo_anterior is not None:
                 if processo_anterior != processo:
+                    # === ADIÇÃO === salvar e restaurar contexto
+                    self.salvar_contexto(processo_anterior)
+                    self.restaurar_contexto(processo)
+
                     self.troca_contexto(processo_anterior, processo)
 
             processo.Executar()
             self.__cpu_utilizada += 1  # incrementa tempo de CPU usado
+
             # atualiza tempo de espera em pronto para todos os processos exceto o executando
             for p in self.__tabelaProcessos:
                 if p.estado == "Pronto" and p != processo:
                     self.__tempos_espera[p.id_processo] += 1
-            # atualiza tempo de retorno
+
+            # atualiza tempo de retorno SOMENTE para processos que terminaram naturalmente
             for p in self.__tabelaProcessos:
-                if p.estado != "Terminado":
-                    self.finalizarProcesso(p)
+                if p.estado == "Terminado":
                     self.__tempos_retorno[p.id_processo] += 1
+
         else:
             print("[SO] Nenhum processo para executar.\n")
             self.__logs.append("[INFO] Nenhum processo para executar.")
@@ -175,6 +206,7 @@ class SistemaOperacional:
         for evento in self.__logs:
             print(evento)
         print("============================\n")
+
     def salvar_logs_txt(self, nome_arquivo: str = "logs_SO.txt"):
         """Salva todos os logs do sistema operacional em um arquivo TXT."""
         try:

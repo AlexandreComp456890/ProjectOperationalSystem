@@ -18,18 +18,24 @@ class GerenciadorRecursos:
     
     # Métodos
     def requisitarRecurso(self, processo: Processo, recurso: Recurso) -> bool:
-        if recurso.alocadoPara == -1:
+        """
+        Tenta alocar o recurso ao processo.
+        Agora usa None como valor padrão de "livre".
+        """
+        if recurso.alocadoPara is None:   # antes era -1
             self.recursos[recurso.rid] = recurso
-            return recurso.alocar(int(processo.id_processo))
+            return recurso.alocar(processo.id_processo)  # antes tentava converter pra int
         else:
             processo.Bloquear()
             return False
 
     def liberarRecurso(self, processo: Processo, recurso: Recurso):
+        """
+        Libera o recurso caso ele esteja alocado para o processo correto.
+        """
         if recurso.alocadoPara == processo.id_processo:
             self.recursos[recurso.rid] = recurso
             recurso.liberar()
-            
 
     def detectarDeadlock(self):
-        pass  # implementar algoritmo
+        pass  # implementar algoritmo futuramente
