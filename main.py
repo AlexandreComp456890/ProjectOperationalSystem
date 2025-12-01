@@ -2,7 +2,8 @@ from Core.sistemaOperacional import SistemaOperacional
 from Core.escalonador import Escalonador
 from Core.gerenciadorMemoria import GerenciadorMemoria
 from Core.gerenciadorRecursos import GerenciadorRecursos
-from Interface.enums import PoliticaEscalonamento
+from Core.recurso import Recurso
+from Interface.enums import PoliticaEscalonamento, TipoRecurso
 
 def mostrar_menu():
     print("""================= MENU DO SISTEMA OPERACIONAL =================
@@ -70,12 +71,14 @@ def main():
             try:
                 prioridade = int(input("Prioridade: "))
                 tamanho = int(input("Tamanho da memória (bytes): "))
+                tipo_recurso = Recurso(int(pid), TipoRecurso.CPU)
             except ValueError:
                 print("Valores inválidos!")
                 continue
-            so.criarProcesso(pid, prioridade, tamanho)
 
-        # ================== FINALIZAR PROCESSO ====================
+            so.criarProcesso(pid, prioridade, tamanho, tipo_recurso)
+        
+        # ==================  FINALIZAR PROCESSO  ====================
         elif opc == "2":
             pid = input("ID do processo a finalizar: ")
             proc = next((p for p in so.tabelaProcessos if p.id_processo == pid), None)

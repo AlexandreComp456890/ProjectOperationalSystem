@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 class IMetodosProcessosThread(ABC):
     @abstractmethod
-    def Executar(self):
+    def Executar(self, quantum: int):
         pass
     @abstractmethod
     def Bloquear(self):

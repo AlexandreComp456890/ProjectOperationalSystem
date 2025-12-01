@@ -52,20 +52,28 @@ class SistemaOperacional:
         return self.__cpu_utilizada
 
     # MÉTODOS
-    def criarProcesso(self, pid: str, prioridade: int = 0, tamanho_memoria: int = 16):
+    def criarProcesso(self, pid: str, prioridade: int = 0, tamanho_memoria: int = 16, tipo_recurso: Recurso = NotImplemented):
         """Cria um processo e tenta alocá-lo na memória."""
         p = Processo(pid, prioridade)
         # inicializa métricas de processo
         self.__tempos_retorno[pid] = 0
         self.__tempos_espera[pid] = 0
-        self.__tempos_primeira_cpu[pid] = None
+        self.__tempos_primeira_cpu[pid] = 0
 
         # Aloca memória
-        sucesso = self.__gerenciador_memoria.alocar_processo(p, tamanho_memoria)
-        if not sucesso:
+        if tipo_recurso == NotImplemented:
+            print(f"[SO] Falha ao criar processo {pid} — recurso não especificado.")
+            return None
+        
+        sucesso_memoria = self.__gerenciador_memoria.alocar_processo(p, tamanho_memoria)
+        sucesso_recurso = self.__gerenciador_recursos.requisitarRecurso(p, tipo_recurso)
+        if not sucesso_memoria:
             print(f"[SO] Falha ao criar processo {pid} — memória insuficiente.")
             self.__logs.append(f"[ERRO] Falha ao criar processo {pid} — memória insuficiente.")
             return None
+
+        if not sucesso_recurso:
+            print(f"[SO] Processo {pid} bloqueado — recurso não disponível. Aguardando liberação...")
 
         self.__tabelaProcessos.append(p)
         self.__escalonador.AdicionarProcesso(p)
