@@ -1,5 +1,5 @@
 from typing import List
-from .processo import Processo 
+from .processo import Processo
 from .escalonador import Escalonador
 from .gerenciadorMemoria import GerenciadorMemoria
 from .gerenciadorRecursos import GerenciadorRecursos
@@ -13,13 +13,17 @@ from .DispositivosES.dispositivosES import DispositivoES, RequisicaoES
 
 
 class SistemaOperacional:
+    """
+    Classe principal do SO, gerencia processos, memória, recursos e escalonamento.
+    Inclui métricas de desempenho e verificação de deadlocks.
+    """
+
     def __init__(self, escalonador: Escalonador, gerenciadorMemoria: GerenciadorMemoria, gerenciadorRecursos: GerenciadorRecursos):
 
         self.__tabelaProcessos: List[Processo] = []
         self.__escalonador: Escalonador = escalonador
         self.__gerenciador_memoria: GerenciadorMemoria = gerenciadorMemoria
         self.__gerenciador_recursos: GerenciadorRecursos = gerenciadorRecursos
-
         self.__trocas_contexto: int = 0
         self.__logs: List[str] = []
         self.__cpu_utilizada: int = 0
@@ -44,18 +48,22 @@ class SistemaOperacional:
 
     @property
     def tabelaProcessos(self) -> List[Processo]:
+        """Retorna a tabela de processos do SO."""
         return self.__tabelaProcessos
 
     @property
     def escalonador(self) -> Escalonador:
+        """Retorna o escalonador atual."""
         return self.__escalonador
 
     @property
     def gerenciador_memoria(self) -> GerenciadorMemoria:
+        """Retorna o gerenciador de memória."""
         return self.__gerenciador_memoria
 
     @property
     def gerenciador_recursos(self) -> GerenciadorRecursos:
+        """Retorna o gerenciador de recursos."""
         return self.__gerenciador_recursos
 
 
@@ -163,9 +171,14 @@ class SistemaOperacional:
 
     # ESCALONAMENTO -----------------------------------------------------------------------------------------
 
+    # ================================================================
+    # ESCALONAMENTO
+    # ================================================================
     def escalonar(self):
-
         self.__tempo_global += 1
+
+        # Detecta deadlock antes de cada ciclo
+        self.__gerenciador_recursos.detectarDeadlock(self.__tabelaProcessos)
 
         processo_anterior = self.escalonador.processo_atual
         processo = self.__escalonador.ObterProximoProcesso()
@@ -186,6 +199,21 @@ class SistemaOperacional:
             print("[SO] Nenhum processo para executar.\n")
             self.log("[SO] Nenhum processo para executar.\n")
 
+    # ================================================================
+    # VERIFICAÇÃO DE DEADLOCK
+    # ================================================================
+    def verificarDeadlock(self):
+        """
+        Verifica se há deadlock entre os processos do SO.
+        Adiciona logs caso deadlock seja detectado.
+        """
+        deadlocked = self.__gerenciador_recursos.detectarDeadlock(self.__tabelaProcessos)
+        if deadlocked:
+            self.__logs.append(f"[DEADLOCK] Deadlock detectado nos processos: {', '.join(deadlocked)}")
+            print(f"[DEADLOCK] Deadlock detectado nos processos: {', '.join(deadlocked)}")
+        else:
+            self.__logs.append("[DEADLOCK] Nenhum deadlock detectado")
+            print("[DEADLOCK] Nenhum deadlock detectado")
 
 
     # SISTEMA DE ARQUIVOS ----------------------------------------------------------------------------------
