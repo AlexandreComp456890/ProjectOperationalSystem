@@ -15,9 +15,12 @@ Thumbs.db
 
 # Logs
 *.log
+logs_SO.txt
+test.py
 
 # Arquivos temporários do editor
 *.swp
 *.swo
 *.vscode/
 .idea/
+

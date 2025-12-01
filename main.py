@@ -46,7 +46,7 @@ def main():
     print("\n===== INICIALIZANDO SISTEMA OPERACIONAL =====\n")
 
     # Inicialização dos gerenciadores
-    memoria = GerenciadorMemoria(memoria_total=64, tamanho_pagina=8)
+    memoria = GerenciadorMemoria(memoria_total=256, tamanho_pagina=4)
     recursos = GerenciadorRecursos()
 
     # Inicializa o escalonador padrão
@@ -62,6 +62,7 @@ def main():
 
         # ======================= SAIR ==============================
         if opc == "0":
+            so.salvar_logs_txt("logs_SO.txt")
             print("Encerrando sistema...")
             break
 
