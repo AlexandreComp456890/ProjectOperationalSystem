@@ -20,7 +20,7 @@ class Escalonador:
         return self.__fila_de_prontos
 
     @property
-    def processo_atual(self) -> Processo:
+    def processo_atual(self) -> Processo | None:
         return self.__processo_atual
 
     @property
@@ -69,7 +69,7 @@ class Escalonador:
         if processo not in self.__fila_de_prontos:
             self.__fila_de_prontos.append(processo)
 
-    def ObterProximoProcesso(self) -> Processo:
+    def ObterProximoProcesso(self) -> Processo | None:
         if not self.__fila_de_prontos:
             self.__processo_atual = None
             return None

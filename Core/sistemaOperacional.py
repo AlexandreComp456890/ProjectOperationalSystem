@@ -4,6 +4,7 @@ from .escalonador import Escalonador
 from .gerenciadorMemoria import GerenciadorMemoria
 from .gerenciadorRecursos import GerenciadorRecursos
 from .recurso import Recurso
+from Core.SistemasArquivo.SistemasArquivo import SistemaArquivos
 
 class SistemaOperacional:
     def __init__(self, escalonador: Escalonador, gerenciadorMemoria: GerenciadorMemoria, gerenciadorRecursos: GerenciadorRecursos):
@@ -112,8 +113,9 @@ class SistemaOperacional:
                 self.__tempos_primeira_cpu[processo.id_processo] = self.__cpu_utilizada
 
             # troca de contexto se necessário
-            if processo_anterior != processo:
-                self.troca_contexto(processo_anterior, processo)
+            if processo_anterior is not None:
+                if processo_anterior != processo:
+                    self.troca_contexto(processo_anterior, processo)
 
             processo.Executar()
             self.__cpu_utilizada += 1  # incrementa tempo de CPU usado
@@ -124,6 +126,7 @@ class SistemaOperacional:
             # atualiza tempo de retorno
             for p in self.__tabelaProcessos:
                 if p.estado != "Terminado":
+                    self.finalizarProcesso(p)
                     self.__tempos_retorno[p.id_processo] += 1
         else:
             print("[SO] Nenhum processo para executar.\n")
