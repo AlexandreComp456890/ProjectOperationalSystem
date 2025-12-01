@@ -1,0 +1,7 @@
+[INFO] Processo P1 criado e adicionado ao escalonador.
+[ERRO] Falha ao criar processo P2 — memória insuficiente.
+[ERRO] Falha ao criar processo P3 — memória insuficiente.
+[INFO] Nenhum processo para executar.
+[INFO] Nenhum processo para executar.
+[INFO] Nenhum processo para executar.
+[METRICS] Trocas: 0, CPU: 2, Throughput: 0.50

@@ -125,43 +125,44 @@ class SistemaOperacional:
 
     def escalonar(self):
         """Executa o próximo processo na fila do escalonador e contabiliza métricas e sobrecarga."""
-        
-        # === ADIÇÃO === avança o tempo global
+
+        # Avança o tempo global do sistema
         self.__tempo_global += 1
 
         processo_anterior = self.escalonador.processo_atual
         processo = self.__escalonador.ObterProximoProcesso()
 
         if processo:
-            # primeira execução do processo
+            # Marca primeira execução se ainda não registrado
             if self.__tempos_primeira_cpu[processo.id_processo] is None:
-                self.__tempos_primeira_cpu[processo.id_processo] = self.__cpu_utilizada
+                self.__tempos_primeira_cpu[processo.id_processo] = self.__tempo_global
 
-            # troca de contexto se necessário
-            if processo_anterior is not None:
-                if processo_anterior != processo:
-                    # === ADIÇÃO === salvar e restaurar contexto
-                    self.salvar_contexto(processo_anterior)
-                    self.restaurar_contexto(processo)
+            # Troca de contexto se necessário
+            if processo_anterior is not None and processo_anterior != processo:
+                self.salvar_contexto(processo_anterior)
+                self.restaurar_contexto(processo)
+                self.troca_contexto(processo_anterior, processo)
 
-                    self.troca_contexto(processo_anterior, processo)
+            # Executa processo passando tempo global
+            processo.Executar(quantum=2, tempo_atual=self.__tempo_global)
+            self.__cpu_utilizada += 1
 
-            processo.Executar()
-            self.__cpu_utilizada += 1  # incrementa tempo de CPU usado
-
-            # atualiza tempo de espera em pronto para todos os processos exceto o executando
+            # Atualiza tempo de espera de processos PRONTOS exceto o executando
             for p in self.__tabelaProcessos:
                 if p.estado == "Pronto" and p != processo:
+                    p.incrementarEspera()
                     self.__tempos_espera[p.id_processo] += 1
 
-            # atualiza tempo de retorno SOMENTE para processos que terminaram naturalmente
+            # Atualiza tempos de retorno para processos finalizados
             for p in self.__tabelaProcessos:
-                if p.estado == "Terminado":
-                    self.__tempos_retorno[p.id_processo] += 1
+                if p.estado == "Terminado" and self.__tempos_retorno[p.id_processo] == 0:
+                    self.__tempos_retorno[p.id_processo] = self.__tempo_global - (p.tempo_chegada or 0)
 
         else:
             print("[SO] Nenhum processo para executar.\n")
             self.__logs.append("[INFO] Nenhum processo para executar.")
+
+
 
     def mostrar_mapa_memoria(self):
         """Exibe o mapa de memória mostrando frames ocupados e livres."""

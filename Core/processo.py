@@ -193,9 +193,10 @@ class Processo(IMetodosProcessosThread):
         """
         Executa o processo.
         Percorre as threads e executa as que estão no estado PRONTO.
+        Atualiza métricas: tempo de primeira execução, término, tempo de execução total.
         """
 
-        # Marca a primeira execução
+        # Marca a primeira execução do processo
         if tempo_atual is not None and self.__tempo_primeira_execucao is None:
             self.__tempo_primeira_execucao = tempo_atual
 
@@ -204,21 +205,30 @@ class Processo(IMetodosProcessosThread):
         self.__registradores["AX"] += 1
 
         if not self.__threads_filhas:
-            print("Erro. Esse processo não tem threads!")
+            print(f"[Erro] Processo {self.__id_processo} não possui threads!")
             return
 
-        # EXECUTA SOMENTE THREADS PRONTAS
+        # Executa somente threads PRONTAS
         for thread in self.__threads_filhas:
             if thread.estado == Estado.PRONTO.value:
                 thread.Executar(quantum)
+                # Registra primeira execução da thread
+                if tempo_atual is not None:
+                    thread.registrarPrimeiraExecucao(tempo_atual)
+                # Incrementa tempo de espera de threads não executadas
+                for t in self.__threads_filhas:
+                    if t.estado == Estado.PRONTO.value and t != thread:
+                        t.incrementarEspera()
 
-        # ATUALIZA TEMPO EXEC
+        # Atualiza tempo de execução do processo como soma das threads
         self.__tempo_exec = sum(thread.tempo_exec for thread in self.__threads_filhas)
 
-        # FINALIZAR QUANDO TODAS AS THREADS ACABAREM
+        # Finaliza processo quando todas as threads terminarem
         if all(thread.estado == Estado.TERMINADO.value for thread in self.__threads_filhas):
             self.Finalizar()
-            return
+            # Registra tempo de término do processo
+            if tempo_atual is not None:
+                self.__tempo_termino = tempo_atual
 
         
     def Bloquear(self):
@@ -255,3 +265,25 @@ class Processo(IMetodosProcessosThread):
             self.__threads_filhas.append(thread)
 
         self.__tempo_exec = sum(thread.tempo_exec for thread in self.__threads_filhas)
+    
+    # ================================================================
+    # FUNÇÕES PARA MÉTRICAS
+    # ================================================================
+    def aplicarAging(self):
+        """Aplica envelhecimento (aging) na prioridade do processo se estiver em pronto."""
+        if self.__estado == Estado.PRONTO:
+            self.__prioridade += 1  # Pode ajustar o incremento conforme necessário
+
+    def incrementarEsperaThread(self):
+        """Incrementa o tempo de espera de todas as threads em pronto."""
+        for thread in self.__threads_filhas:
+            if thread.estado == Estado.PRONTO.value:
+                if not hasattr(thread, "_tempo_espera"):
+                    thread._tempo_espera = 0
+                thread._tempo_espera += 1
+
+    def registrarPrimeiraExecucaoThread(self, tempo_atual: int):
+        """Registra a primeira execução de todas as threads que ainda não executaram."""
+        for thread in self.__threads_filhas:
+            if not hasattr(thread, "_tempo_primeira_execucao") or thread._tempo_primeira_execucao is None:
+                thread._tempo_primeira_execucao = tempo_atual
