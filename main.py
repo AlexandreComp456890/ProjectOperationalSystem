@@ -3,144 +3,178 @@ from Core.escalonador import Escalonador
 from Core.gerenciadorMemoria import GerenciadorMemoria
 from Core.gerenciadorRecursos import GerenciadorRecursos
 from Core.recurso import Recurso
-from Interface.enums import PoliticaEscalonamento, TipoRecurso
-
-def mostrar_menu():
-    print("""================= MENU DO SISTEMA OPERACIONAL =================
-1 - Criar Processo
-2 - Finalizar Processo
-3 - Listar Processos
-4 - Trocar Política de Escalonamento
-5 - Mostrar Mapa de Memória
-6 - Executar 1 Ciclo de CPU
-7 - Executar N Ciclos de CPU
-8 - Mostrar Métricas do SO
-9 - Mostrar Logs do SO
-10 - Salvar logs em TXT
-0 - Sair
-================================================================
-""")
-
-def escolher_politica():
-    print("""
-Escolha a nova política:
-
-1 - FCFS
-2 - Round Robin
-3 - Prioridade Preemptivo
-4 - Prioridade NÃO Preemptivo
-""")
-    opc = input("Opção: ")
-    if opc == "1":
-        return PoliticaEscalonamento.FCFS
-    elif opc == "2":
-        return PoliticaEscalonamento.RR
-    elif opc == "3":
-        return PoliticaEscalonamento.PRIORIDADE_PREEMPTIVO
-    elif opc == "4":
-        return PoliticaEscalonamento.PRIORIDADE_NAO_PREEMPTIVO
-    print("Opção inválida!")
-    return None
+from Interface.enums import PoliticaEscalonamento
+from Interface.enums import TipoRecurso
 
 def main():
-    print("\n===== INICIALIZANDO SISTEMA OPERACIONAL =====\n")
 
-    # Inicialização dos gerenciadores
-    memoria = GerenciadorMemoria(memoria_total=256, tamanho_pagina=4)
+    escalonador = Escalonador([], PoliticaEscalonamento.RR)
+    memoria = GerenciadorMemoria(memoria_total=256,tamanho_pagina=4)
     recursos = GerenciadorRecursos()
 
-    # Inicializa o escalonador padrão
-    escalonador = Escalonador([], PoliticaEscalonamento.FCFS)
-
-    # Inicializa o SO
     so = SistemaOperacional(escalonador, memoria, recursos)
+    id_recurso = 0
 
-    # Loop do menu
     while True:
-        mostrar_menu()
-        opc = input("Escolha uma opção: ")
+        print("\n========= MENU DO SISTEMA OPERACIONAL =========")
+        print("1 - Criar processo")
+        print("2 - Finalizar processo")
+        print("3 - Executar 1 ciclo de CPU")
+        print("4 - Solicitar E/S")
+        print("5 - Listar processos")
+        print("6 - Mostrar memória")
+        print("7 - Mostrar métricas")
+        print("8 - Mostrar logs")
+        print("9 - Sistema de Arquivos")
+        print("0 - Sair")
+        opc = input("Escolha: ")
 
-        # ======================= SAIR ==============================
-        if opc == "0":
-            so.salvar_logs_txt("logs_SO.txt")
-            print("Encerrando sistema...")
-            break
+        # ============================
+        # Criar processo
+        # ============================
+        if opc == "1":
+            pid = input("PID: ")
+            prio = int(input("Prioridade: "))
+            mem = int(input("Memória necessária: "))
 
-        # ==================== CRIAR PROCESSO ======================
-        elif opc == "1":
-            pid = input("ID do Processo: ")
-            try:
-                prioridade = int(input("Prioridade: "))
-                tamanho = int(input("Tamanho da memória (bytes): "))
-                tipo_recurso = Recurso(int(pid), TipoRecurso.CPU)
-            except ValueError:
-                print("Valores inválidos!")
-                continue
+            print("Tipos de recursos disponíveis:")
+            for r in TipoRecurso:
+                print(f"- {r.name}")
 
-            so.criarProcesso(pid, prioridade, tamanho, tipo_recurso)
-        
-        # ==================  FINALIZAR PROCESSO  ====================
+            recurso_nome = input("Recurso necessário: ").upper()
+            recurso_tipo = TipoRecurso[recurso_nome]
+            
+            recurso = Recurso(++id_recurso, recurso_tipo)
+
+            so.criarProcesso(pid, prio, mem, recurso)
+
+        # ============================
+        # Finalizar processo
+        # ============================
         elif opc == "2":
-            pid = input("ID do processo a finalizar: ")
+            pid = input("PID do processo a finalizar: ")
             proc = next((p for p in so.tabelaProcessos if p.id_processo == pid), None)
             if proc:
                 so.finalizarProcesso(proc)
             else:
-                print("Processo não encontrado!")
+                print("Processo não encontrado.")
 
-        # ==================== LISTAR PROCESSOS ====================
+        # ============================
+        # Executar CPU
+        # ============================
         elif opc == "3":
-            print("\n=== PROCESSOS NA TABELA ===")
-            if not so.tabelaProcessos:
-                print("Nenhum processo criado.")
-            else:
-                for p in so.tabelaProcessos:
-                    print(f"PID: {p.id_processo} | Estado: {p.estado} | Prioridade: {p.prioridade} | Tempo Exec: {p.tempo_exec}")
-            print("==========================\n")
-
-        # ================= TROCAR ESCALONAMENTO ===================
-        elif opc == "4":
-            politica = escolher_politica()
-            if politica:
-                so.escalonador.politica = politica
-                print(f"Política de escalonamento alterada para: {politica.value}\n")
-
-        # =================== MAPA DE MEMÓRIA ======================
-        elif opc == "5":
-            so.mostrar_mapa_memoria()
-
-        # ===================== 1 CICLO DE CPU =====================
-        elif opc == "6":
             so.escalonar()
 
-        # ====================== N CICLOS DE CPU ===================
-        elif opc == "7":
-            try:
-                n = int(input("Quantos ciclos deseja executar? "))
-            except ValueError:
-                print("Valor inválido!")
-                continue
-            for _ in range(n):
-                so.escalonar()
+        # ============================
+        # Solicitar operação de E/S
+        # ============================
+        elif opc == "4":
+            pid = input("PID do processo: ")
+            proc = next((p for p in so.tabelaProcessos if p.id_processo == pid), None)
 
-        # ===================== MOSTRAR MÉTRICAS ===================
-        elif opc == "8":
+            if not proc:
+                print("Processo não encontrado.")
+                continue
+
+            tipo = input("Tipo de E/S (DISCO/REDE/TECLADO): ").upper()
+            dur = int(input("Duração: "))
+            so.solicitar_es(proc, tipo, dur)
+
+        # ============================
+        # Listar processos
+        # ============================
+        elif opc == "5":
+            print("\n=== Processos ===")
+            for p in so.tabelaProcessos:
+                print(f"{p.id_processo} | estado={p.estado} | prioridade={p.prioridade}")
+
+        # ============================
+        # Mostrar memória
+        # ============================
+        elif opc == "6":
+            so.mostrar_mapa_memoria()
+
+        # ============================
+        # Mostrar métricas
+        # ============================
+        elif opc == "7":
             so.mostrar_metricas()
 
-        # ===================== MOSTRAR LOGS =======================
-        elif opc == "9":
+        # ============================
+        # Mostrar logs
+        # ============================
+        elif opc == "8":
             so.mostrar_logs()
+            
+        # ============================
+        # Sistema de Arquivos
+        # ============================
+        elif opc == "9":
+            while True:
+                print("\n--- SISTEMA DE ARQUIVOS ---")
+                print("1 - mkdir")
+                print("2 - touch")
+                print("3 - write")
+                print("4 - read")
+                print("5 - ls")
+                print("6 - tree")
+                print("7 - cd")
+                print("8 - rm")
+                print("0 - Voltar")
+                opf = input("Escolha: ")
 
-        # ===================== SALVAR LOGS EM TXT =================
-        elif opc == "10":
-            nome_arquivo = input("Nome do arquivo TXT (padrão logs_SO.txt): ").strip()
-            if not nome_arquivo:
-                nome_arquivo = "logs_SO.txt"
-            so.salvar_logs_txt(nome_arquivo)
+                if opf == "1":
+                    caminho = input("Caminho: ")
+                    so.criar_diretorio(caminho)
 
-        # ===================== OPÇÃO INVÁLIDA =====================
+                elif opf == "2":
+                    caminho = input("Caminho: ")
+                    so.criar_arquivo(caminho)
+
+                elif opf == "3":
+                    caminho = input("Arquivo: ")
+                    texto = input("Conteúdo: ")
+                    so.escrever_arquivo(caminho, texto)
+
+                elif opf == "4":
+                    caminho = input("Arquivo: ")
+                    conteudo = so.ler_arquivo(caminho)
+                    print("Conteúdo:", conteudo)
+
+                elif opf == "5":
+                    caminho = input("Diretório (ENTER = atual): ")
+                    caminho = caminho if caminho else so.sistema_arquivos.caminho_atual
+                    so.listar_diretorio(caminho)
+
+                elif opf == "6":
+                    so.sistema_arquivos.tree()
+
+                elif opf == "7":
+                    caminho = input("Caminho: ")
+                    so.mudar_diretorio(caminho)
+
+                elif opf == "8":
+                    caminho = input("Arquivo/diretório: ")
+                    so.remover_arquivo(caminho)
+
+                elif opf == "0":
+                    break
+
+                else:
+                    print("Opção inválida.")
+
+        # ============================
+        # Encerrar execução
+        # ============================
+        elif opc == "0":
+            nome = input("Nome do arquivo de logs (ENTER para padrão): ")
+            so.salvar_logs_txt(nome_arquivo=nome if nome else None)
+            print("Encerrando...")
+            break
+
         else:
-            print("Opção inválida! Tente novamente.\n")
+            print("Opção inválida.")
+
 
 if __name__ == "__main__":
     main()

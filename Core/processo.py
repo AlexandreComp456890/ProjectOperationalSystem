@@ -1,9 +1,8 @@
 import random 
-from enum import Enum
 from typing import List, Self
 from .thread import Thread  # Importa a classe
 from .recurso import Recurso
-from Interface.enums import Estado 
+from Interface.enums import Estado, TipoRecurso
 from Interface.IMetodosProcessosThread import IMetodosProcessosThread
 
 class Processo(IMetodosProcessosThread):
@@ -24,7 +23,7 @@ class Processo(IMetodosProcessosThread):
         self.__id_processo: str = IdProcesso
         self.__estado: Estado = Estado.NOVO
         self.__prioridade: int = Prioridade
-        self.__tempo_exec: int = None
+        self.__tempo_exec: int = -1
 
         self.__threads_filhas: List[Thread] = []
         self.__dependencias: List[Recurso] = []
@@ -171,9 +170,6 @@ class Processo(IMetodosProcessosThread):
         if nome in self.__arquivos_abertos:
             del self.__arquivos_abertos[nome]
 
-    # ================================================================
-    # MÉTRICAS QUE FALTAVAM (ADICIONADAS)
-    # ================================================================
     def calcularTempoResposta(self):
         """Retorna o tempo até a primeira execução do processo."""
         if self.__tempo_chegada is None or self.__tempo_primeira_execucao is None:
@@ -249,19 +245,28 @@ class Processo(IMetodosProcessosThread):
         self.__estado = Estado.TERMINADO
         for thread in self.__threads_filhas:
             thread.Finalizar()
+    
+    def SolicitarES(self, sistema, tipo: str = TipoRecurso.DISCO.value, duracao: int = 3):
+        """
+        Helper para o processo solicitar E/S ao sistema.
+        Chama o SistemaOperacional.solicitar_es(self, tipo, duracao).
+        """
+        # marca como bloqueado localmente
+        self.Bloquear()
+        sistema.solicitar_es(self, tipo=tipo, duracao=duracao)
 
     # ================================================================
     # CRIAÇÃO AUTOMÁTICA DE THREADS
     # ================================================================
-    def __Criarthreads(self, num_threads: int = None):
+    def __Criarthreads(self, num_threads: int = -1):
         """
         Cria automaticamente de 1 a 5 threads com tempo aleatório.
         """
-        if num_threads is None:
+        if num_threads == -1:
             num_threads = random.randint(1, 5)
 
         for i in range(num_threads):
-            thread = Thread(i + 1, None, self.__id_processo)
+            thread = Thread(i + 1, -1, int(self.__id_processo))
             self.__threads_filhas.append(thread)
 
         self.__tempo_exec = sum(thread.tempo_exec for thread in self.__threads_filhas)

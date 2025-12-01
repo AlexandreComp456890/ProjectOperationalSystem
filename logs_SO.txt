@@ -1,4 +1,10 @@
-[INFO] Processo P1 criado e adicionado ao escalonador.
-[INFO] Processo P2 criado e adicionado ao escalonador.
-[INFO] Processo P3 criado e adicionado ao escalonador.
-[CONTEXT SWITCH] None -> P1
+[SO] Falha ao criar processo 1: recurso não especificado.
+[SO] Falha ao criar processo 1: memória insuficiente.
+[SO] Processo 1 aguardando recurso...
+[SO] Processo 1 criado.
+
+[SO] Falha ao criar processo 2: recurso não especificado.
+[SO] Falha ao criar processo 2: memória insuficiente.
+[SO] Processo 2 aguardando recurso...
+[SO] Processo 2 criado.
+

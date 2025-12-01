@@ -11,6 +11,7 @@ class TipoRecurso(Enum):
     CPU = "CPU"
     ES = "Entrada/Saída"
     MEMORIA = "Memória"
+    DISCO = "Disco"
 
 class PoliticaEscalonamento(Enum):
     FCFS = "First Come First Serve"

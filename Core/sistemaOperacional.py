@@ -4,26 +4,44 @@ from .escalonador import Escalonador
 from .gerenciadorMemoria import GerenciadorMemoria
 from .gerenciadorRecursos import GerenciadorRecursos
 from .recurso import Recurso
-from Core.SistemasArquivo.SistemasArquivo import SistemaArquivos
+
+# === ADIÇÃO === Sistema de Arquivos
+from .SistemasArquivo.SistemasArquivo import SistemaArquivos
+
+# === ADIÇÃO === Dispositivos de E/S
+from .DispositivosES.dispositivosES import DispositivoES, RequisicaoES
+
 
 class SistemaOperacional:
     def __init__(self, escalonador: Escalonador, gerenciadorMemoria: GerenciadorMemoria, gerenciadorRecursos: GerenciadorRecursos):
-        self.__tabelaProcessos: List[Processo] = []  # Tabela de processos do sistema
+
+        self.__tabelaProcessos: List[Processo] = []
         self.__escalonador: Escalonador = escalonador
         self.__gerenciador_memoria: GerenciadorMemoria = gerenciadorMemoria
         self.__gerenciador_recursos: GerenciadorRecursos = gerenciadorRecursos
-        self.__trocas_contexto: int = 0   # contador de context switch
-        self.__logs: List[str] = []       # lista de logs
-        self.__cpu_utilizada: int = 0     # unidades de tempo de CPU usadas
-        self.__tempo_sobrecarga_contexto: int = 1  # simula 1 unidade de tempo por troca de contexto
-        self.__tempos_retorno: dict[str, int] = {}  # PID -> tempo total desde criação até finalização
-        self.__tempos_espera: dict[str, int] = {}   # PID -> tempo total em pronto
-        self.__tempos_primeira_cpu: dict[str, int] = {}  # PID -> tempo até primeira execução
 
-        # === ADIÇÃO === tempo global do sistema
+        self.__trocas_contexto: int = 0
+        self.__logs: List[str] = []
+        self.__cpu_utilizada: int = 0
+        self.__tempo_sobrecarga_contexto: int = 1
+
+        self.__tempos_retorno: dict[str, int] = {}
+        self.__tempos_espera: dict[str, int] = {}
+        self.__tempos_primeira_cpu: dict[str, int] = {}
+
+        # === ADIÇÃO === Instância do Sistema de Arquivos
+        self.sistema_arquivos = SistemaArquivos()
+
+        # === ADIÇÃO === Gerenciador de Dispositivos de E/S
+        self.dispositivo_es = DispositivoES()
+        self.interrupt_queue: List[RequisicaoES] = []
+
+        # === ADIÇÃO === tempo global
         self.__tempo_global: int = 0
 
-    # GETTERS
+
+    # GETTERS ----------------------------------------------------------------------------------------------
+
     @property
     def tabelaProcessos(self) -> List[Processo]:
         return self.__tabelaProcessos
@@ -40,151 +58,164 @@ class SistemaOperacional:
     def gerenciador_recursos(self) -> GerenciadorRecursos:
         return self.__gerenciador_recursos
 
-    @property
-    def trocas_contexto(self):
-        """Retorna o número de trocas de contexto já realizadas."""
-        return self.__trocas_contexto
 
-    @property
-    def logs(self):
-        """Retorna a lista de logs de eventos do SO."""
-        return self.__logs
+    # CONTEXTO ----------------------------------------------------------------------------------------------
 
-    @property
-    def cpu_utilizada(self):
-        """Retorna o total de unidades de tempo de CPU utilizadas."""
-        return self.__cpu_utilizada
-
-    # === ADIÇÃO === salvar contexto
     def salvar_contexto(self, processo: Processo):
-        """Salva o contexto atual do processo antes de uma troca."""
-        if processo is None:
-            return
-        self.__logs.append(f"[SAVE] Contexto salvo de {processo.id_processo}")
+        if processo:
+            self.__logs.append(f"[SAVE] Contexto salvo de {processo.id_processo}")
+            self.log(f"[SAVE] Contexto salvo de {processo.id_processo}")
 
-    # === ADIÇÃO === restaurar contexto
+
     def restaurar_contexto(self, processo: Processo):
-        """Restaura o contexto salvo para o processo que irá executar."""
-        if processo is None:
-            return
-        self.__logs.append(f"[RESTORE] Contexto restaurado de {processo.id_processo}")
+        if processo:
+            self.__logs.append(f"[RESTORE] Contexto restaurado de {processo.id_processo}")
+            self.log(f"[RESTORE] Contexto restaurado de {processo.id_processo}")
+    
+    def troca_contexto(self, processo: Processo, processo_novo: Processo):
+        if processo:
+            self.__logs.append(f"[SWITCH] Troca de contexto de {processo.id_processo} para {processo_novo.id_processo}")
+            self.log(f"[SWITCH] Troca de contexto de {processo.id_processo} para {processo_novo.id_processo}")
 
-    # MÉTODOS
+            
+    # MÉTODO PADRÃO DE LOG ----------------------------------------------------------------------------------
+    
+    def log(self, msg: str):
+        """Registra mensagem no log interno e também imprime na tela."""
+        self.__logs.append(msg)
+        print(msg)
+        
+    
+    # PROCESSOS ---------------------------------------------------------------------------------------------
+
     def criarProcesso(self, pid: str, prioridade: int = 0, tamanho_memoria: int = 16, tipo_recurso: Recurso = NotImplemented):
-        """Cria um processo e tenta alocá-lo na memória."""
+
         p = Processo(pid, prioridade)
-        # inicializa métricas de processo
+        p.registrarChegada(self.__tempo_global)
+
         self.__tempos_retorno[pid] = 0
         self.__tempos_espera[pid] = 0
         self.__tempos_primeira_cpu[pid] = 0
 
-        # === ADIÇÃO === registra tempo de chegada real
-        p.registrarChegada(self.__tempo_global)
-
-        # Aloca memória
         if tipo_recurso == NotImplemented:
-            print(f"[SO] Falha ao criar processo {pid} — recurso não especificado.")
-            return None
-        
-        sucesso_memoria = self.__gerenciador_memoria.alocar_processo(p, tamanho_memoria)
-        sucesso_recurso = self.__gerenciador_recursos.requisitarRecurso(p, tipo_recurso)
-        if not sucesso_memoria:
-            print(f"[SO] Falha ao criar processo {pid} — memória insuficiente.")
-            self.__logs.append(f"[ERRO] Falha ao criar processo {pid} — memória insuficiente.")
+            print(f"[SO] Falha ao criar processo {pid}: recurso não especificado.")
             return None
 
-        if not sucesso_recurso:
-            print(f"[SO] Processo {pid} bloqueado — recurso não disponível. Aguardando liberação...")
+        if not self.__gerenciador_memoria.alocar_processo(p, tamanho_memoria):
+            print(f"[SO] Falha ao criar processo {pid}: memória insuficiente.")
+            return None
+
+        if not self.__gerenciador_recursos.requisitarRecurso(p, tipo_recurso):
+            print(f"[SO] Processo {pid} aguardando recurso...")
 
         self.__tabelaProcessos.append(p)
         self.__escalonador.AdicionarProcesso(p)
-        print(f"[SO] Processo {pid} criado e adicionado ao escalonador.\n")
-        self.__logs.append(f"[INFO] Processo {pid} criado e adicionado ao escalonador.")
-        return p 
+        
+        self.log(f"[SO] Falha ao criar processo {pid}: recurso não especificado.")
+        self.log(f"[SO] Falha ao criar processo {pid}: memória insuficiente.")
+        self.log(f"[SO] Processo {pid} aguardando recurso...")
+        self.log(f"[SO] Processo {pid} criado.\n")
+        print(f"[SO] Processo {pid} criado.\n")
+        return p
+
 
     def finalizarProcesso(self, processo: Processo):
-        """Finaliza e remove processo, liberando recursos e memória."""
+
         processo_id = processo.id_processo
         processo.Finalizar()
 
-        # Libera memória
+        # libera memória
         self.__gerenciador_memoria.liberar_processo(processo)
-        # Libera recursos que o processo estiver usando
+
+        # libera recursos
         for recurso in processo.dependencias:
             self.__gerenciador_recursos.liberarRecurso(processo, recurso)
-        processo.dependencias.clear()  # limpa lista de dependências
+
+        processo.dependencias.clear()
 
         if processo in self.__tabelaProcessos:
             self.__tabelaProcessos.remove(processo)
+            self.log(f"[SO] Processo {processo_id} finalizado.\n")
 
-        print(f"[SO] Processo {processo_id} finalizado.\n")
-        self.__logs.append(f"[INFO] Processo {processo_id} finalizado.")
-        # atualiza tempo de retorno
-        if processo_id in self.__tempos_retorno:
-            self.__tempos_retorno[processo_id] += 1  # incrementa última unidade (simplificado)
+
+    # E/S ---------------------------------------------------------------------------------------------------
+
+    def solicitar_es(self, processo: Processo, tipo: str = "DISCO", duracao: int = 3):
+        req = RequisicaoES(processo, tipo, duracao)
+        self.dispositivo_es.adicionar(req)
+        processo.Bloquear()
+        self.log(f"[SO] Processo {processo.id_processo} solicitou E/S ({tipo}).")
+        print(f"[SO] Processo {processo.id_processo} solicitou E/S ({tipo}).")
+
+    def processar_es(self):
+        concluidas = self.dispositivo_es.tick_all()
+
+        for req in concluidas:
+            self._tratador_interrupcao_es(req)
+
+    def _tratador_interrupcao_es(self, req: RequisicaoES):
+        p = req.processo
+        self.log(f"[INTERRUPÇÃO] E/S concluída para {p.id_processo}")
+        print(f"[INTERRUPÇÃO] E/S concluída para {p.id_processo}")
+        p.Pronto()
+        self.__escalonador.AdicionarProcesso(p)
+
+
+    # ESCALONAMENTO -----------------------------------------------------------------------------------------
 
     def escalonar(self):
-        """Executa o próximo processo na fila do escalonador e contabiliza métricas e sobrecarga."""
 
-        # Avança o tempo global do sistema
         self.__tempo_global += 1
 
         processo_anterior = self.escalonador.processo_atual
         processo = self.__escalonador.ObterProximoProcesso()
 
-        if processo:
-            # Marca primeira execução se ainda não registrado
-            if self.__tempos_primeira_cpu[processo.id_processo] is None:
-                self.__tempos_primeira_cpu[processo.id_processo] = self.__tempo_global
+        # antes de CPU → processa E/S
+        self.processar_es()
 
-            # Troca de contexto se necessário
-            if processo_anterior is not None and processo_anterior != processo:
+        if processo:
+
+            if processo_anterior and processo_anterior != processo:
                 self.salvar_contexto(processo_anterior)
                 self.restaurar_contexto(processo)
                 self.troca_contexto(processo_anterior, processo)
 
-            # Executa processo passando tempo global
-            processo.Executar(quantum=2, tempo_atual=self.__tempo_global)
-            self.__cpu_utilizada += 1
-
-            # Atualiza tempo de espera de processos PRONTOS exceto o executando
-            for p in self.__tabelaProcessos:
-                if p.estado == "Pronto" and p != processo:
-                    p.incrementarEspera()
-                    self.__tempos_espera[p.id_processo] += 1
-
-            # Atualiza tempos de retorno para processos finalizados
-            for p in self.__tabelaProcessos:
-                if p.estado == "Terminado" and self.__tempos_retorno[p.id_processo] == 0:
-                    self.__tempos_retorno[p.id_processo] = self.__tempo_global - (p.tempo_chegada or 0)
+            processo.Executar(2, self.__tempo_global)
 
         else:
             print("[SO] Nenhum processo para executar.\n")
-            self.__logs.append("[INFO] Nenhum processo para executar.")
+            self.log("[SO] Nenhum processo para executar.\n")
 
 
 
-    def mostrar_mapa_memoria(self):
-        """Exibe o mapa de memória mostrando frames ocupados e livres."""
-        self.__gerenciador_memoria.mostrar_mapa()
+    # SISTEMA DE ARQUIVOS ----------------------------------------------------------------------------------
 
-    def estatisticas_memoria(self):
-        """Mostra estatísticas gerais do gerenciamento de memória."""
-        self.__gerenciador_memoria.estatisticas()
+    def criar_arquivo(self, caminho: str, conteudo: str = ""):
+        return self.sistema_arquivos.touch(caminho)
 
-    def troca_contexto(self, processo_anterior: Processo, processo_novo: Processo):
-        """Registra e exibe uma troca de contexto entre dois processos, incluindo sobrecarga de tempo."""
-        self.__trocas_contexto += 1
-        # aplica sobrecarga de tempo
-        self.__cpu_utilizada += self.__tempo_sobrecarga_contexto
-        evento = f"[CONTEXT SWITCH] {processo_anterior.id_processo if processo_anterior else 'None'} -> {processo_novo.id_processo}"
-        self.__logs.append(evento)
-        print(f"[SO] Troca de contexto: {processo_anterior.id_processo if processo_anterior else 'Nenhum'} -> {processo_novo.id_processo}")
+    def escrever_arquivo(self, caminho: str, conteudo: str):
+        return self.sistema_arquivos.write(caminho, conteudo)
 
+    def ler_arquivo(self, caminho: str):
+        return self.sistema_arquivos.read(caminho)
+
+    def remover_arquivo(self, caminho: str):
+        return self.sistema_arquivos.rm(caminho)
+
+    def criar_diretorio(self, caminho: str):
+        return self.sistema_arquivos.mkdir(caminho)
+
+    def listar_diretorio(self, caminho: str = "/"):
+        return self.sistema_arquivos.ls(caminho)
+
+    def mudar_diretorio(self, caminho: str):
+        return self.sistema_arquivos.cd(caminho)
+
+    # Metricas ---------------------------------------------------------------------------------------------
     def mostrar_metricas(self):
-        """Exibe métricas completas do SO, incluindo tempos de retorno, espera, primeira CPU, trocas e throughput."""
+        """Exibe métricas completas do SO: trocas, CPU, throughput e tempos de processos."""
         total_processos = len(self.__tabelaProcessos)
-        throughput = total_processos / max(1, self.__cpu_utilizada)  # processos/unidade de tempo
+        throughput = total_processos / max(1, self.__cpu_utilizada)
         print("\n=== MÉTRICAS DO SISTEMA OPERACIONAL ===")
         print(f"Trocas de contexto: {self.__trocas_contexto}")
         print(f"CPU utilizada (unidades de tempo): {self.__cpu_utilizada}")
@@ -200,16 +231,27 @@ class SistemaOperacional:
             print(f"  {pid}: {t}")
         print("======================================\n")
         self.__logs.append(f"[METRICS] Trocas: {self.__trocas_contexto}, CPU: {self.__cpu_utilizada}, Throughput: {throughput:.2f}")
+        self.log(f"[METRICS] Trocas: {self.__trocas_contexto}, CPU: {self.__cpu_utilizada}, Throughput: {throughput:.2f}")
 
     def mostrar_logs(self):
-        """Exibe todos os logs de eventos do SO, incluindo criação, finalização, trocas e erros."""
+        """Exibe todos os logs do SO."""
         print("\n=== LOG DE EVENTOS DO SO ===")
         for evento in self.__logs:
             print(evento)
         print("============================\n")
 
-    def salvar_logs_txt(self, nome_arquivo: str = "logs_SO.txt"):
-        """Salva todos os logs do sistema operacional em um arquivo TXT."""
+    def mostrar_mapa_memoria(self):
+        """Exibe o mapa da memória."""
+        self.__gerenciador_memoria.mostrar_mapa()
+
+    def estatisticas_memoria(self):
+        """Exibe estatísticas da memória."""
+        self.__gerenciador_memoria.estatisticas()
+
+    def salvar_logs_txt(self, nome_arquivo = None):
+        """Salva todos os logs em arquivo TXT."""
+        if nome_arquivo is None:
+            nome_arquivo = "logs_SO.txt"
         try:
             with open(nome_arquivo, "w") as arquivo:
                 for evento in self.__logs:
