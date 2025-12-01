@@ -30,11 +30,11 @@ class Thread(IMetodosProcessosThread):
         self.__id_thread = novo_id
 
     @tempo_exec.setter
-    def tempo_exec(self, novo_tempo: int = 0):
-        if novo_tempo is not None and novo_tempo > 0:
-            self.__tempo_exec = novo_tempo
+    def tempo_exec(self, novo_tempo: int):
+        if novo_tempo <= 0:
+            self.__tempo_exec = 0
         else:
-            self.__tempo_exec = random.randint(1, 10)
+            self.__tempo_exec = novo_tempo
 
     @estado.setter
     def estado(self, novo_estado: Estado):
