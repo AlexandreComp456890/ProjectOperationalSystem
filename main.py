@@ -44,7 +44,7 @@ def main():
             recurso_nome = input("Recurso necessário: ").upper()
             recurso_tipo = TipoRecurso[recurso_nome]
             
-            recurso = Recurso(++id_recurso, recurso_tipo)
+            recurso = Recurso(++id_recurso, tipo=recurso_tipo)
 
             so.criarProcesso(pid, prio, mem, recurso)
 
@@ -63,7 +63,11 @@ def main():
         # Executar CPU
         # ============================
         elif opc == "3":
-            so.escalonar()
+            escalonador_nome = input("Política de escalonamento \n\t-FCFS\n\t-RR\n\t-PRIORIDADE_PREEMPTIVO\n\t-PRIORIDADE_NAO_PREEMPTIVO\nEscolha:").upper()
+            try:
+                so.escalonar(escalonador_nome)
+            except:
+                print("Política inválida.")
 
         # ============================
         # Solicitar operação de E/S

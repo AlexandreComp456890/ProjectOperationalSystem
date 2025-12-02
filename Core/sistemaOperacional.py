@@ -4,6 +4,7 @@ from .escalonador import Escalonador
 from .gerenciadorMemoria import GerenciadorMemoria
 from .gerenciadorRecursos import GerenciadorRecursos
 from .recurso import Recurso
+from Interface.enums import PoliticaEscalonamento
 
 # === ADIÇÃO === Sistema de Arquivos
 from .SistemasArquivo.SistemasArquivo import SistemaArquivos
@@ -91,12 +92,11 @@ class SistemaOperacional:
     def log(self, msg: str):
         """Registra mensagem no log interno e também imprime na tela."""
         self.__logs.append(msg)
-        print(msg)
         
     
     # PROCESSOS ---------------------------------------------------------------------------------------------
 
-    def criarProcesso(self, pid: str, prioridade: int = 0, tamanho_memoria: int = 16, tipo_recurso: Recurso = NotImplemented):
+    def criarProcesso(self, pid: str, prioridade: int = 0, tamanho_memoria: int = 16, tipo_recurso: Recurso = None):
 
         p = Processo(pid, prioridade)
         p.registrarChegada(self.__tempo_global)
@@ -105,23 +105,23 @@ class SistemaOperacional:
         self.__tempos_espera[pid] = 0
         self.__tempos_primeira_cpu[pid] = 0
 
-        if tipo_recurso == NotImplemented:
+        if tipo_recurso is None:
             print(f"[SO] Falha ao criar processo {pid}: recurso não especificado.")
+            self.log(f"[SO] Falha ao criar processo {pid}: recurso não especificado.")
             return None
 
         if not self.__gerenciador_memoria.alocar_processo(p, tamanho_memoria):
             print(f"[SO] Falha ao criar processo {pid}: memória insuficiente.")
+            self.log(f"[SO] Falha ao criar processo {pid}: memória insuficiente.")
             return None
 
         if not self.__gerenciador_recursos.requisitarRecurso(p, tipo_recurso):
+            self.log(f"[SO] Processo {pid} aguardando recurso...")
             print(f"[SO] Processo {pid} aguardando recurso...")
 
         self.__tabelaProcessos.append(p)
         self.__escalonador.AdicionarProcesso(p)
         
-        self.log(f"[SO] Falha ao criar processo {pid}: recurso não especificado.")
-        self.log(f"[SO] Falha ao criar processo {pid}: memória insuficiente.")
-        self.log(f"[SO] Processo {pid} aguardando recurso...")
         self.log(f"[SO] Processo {pid} criado.\n")
         print(f"[SO] Processo {pid} criado.\n")
         return p
@@ -174,12 +174,14 @@ class SistemaOperacional:
     # ================================================================
     # ESCALONAMENTO
     # ================================================================
-    def escalonar(self):
+    def escalonar(self, escalonador: str):
         self.__tempo_global += 1
 
         # Detecta deadlock antes de cada ciclo
         self.__gerenciador_recursos.detectarDeadlock(self.__tabelaProcessos)
 
+        self.escalonador.politica = PoliticaEscalonamento[escalonador]
+        
         processo_anterior = self.escalonador.processo_atual
         processo = self.__escalonador.ObterProximoProcesso()
 

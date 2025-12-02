@@ -1,10 +1,2 @@
-[SO] Falha ao criar processo 1: recurso não especificado.
-[SO] Falha ao criar processo 1: memória insuficiente.
-[SO] Processo 1 aguardando recurso...
 [SO] Processo 1 criado.
-
-[SO] Falha ao criar processo 2: recurso não especificado.
-[SO] Falha ao criar processo 2: memória insuficiente.
-[SO] Processo 2 aguardando recurso...
-[SO] Processo 2 criado.
 
